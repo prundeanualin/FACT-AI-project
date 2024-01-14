@@ -12,5 +12,4 @@ dependencies:
       - numpy
       - scikit-learn
       - tqdm
-      - sas7bdat
-      - pyreadstat
+      - openpyxl
