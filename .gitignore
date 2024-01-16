@@ -2,3 +2,4 @@ model/__pycache__
 .DS_Store
 .idea
 data
+__pycache__
