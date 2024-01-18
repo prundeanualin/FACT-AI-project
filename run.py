@@ -19,6 +19,7 @@ from sklearn.metrics import (
 )
 import os
 import time
+from preprocess_pisa_dataset import preprocess_dataset
 
 args = argparse.ArgumentParser()
 args.add_argument("-DATA", default="pisa2015", type=str)
@@ -45,6 +46,7 @@ args.add_argument("-LR", default=0.001, type=float)
 args.add_argument("-LR_DISC", default=0.01, type=float)
 args.add_argument("-USE_NOFEATURE", default=False, type=bool)
 args.add_argument("-NO_FEATURE", default=0.2, type=float)
+args.add_argument("-PREPROCESS_DATA", default=False, type=bool)
 args = args.parse_args()
 
 
@@ -104,9 +106,13 @@ def attacker_transform(user, feature):
 
 print("load data")
 
-pkl = open("./data/" + args.DATA + "/item2knowledge.pkl", "rb")
-item2knowledge = pickle.load(pkl)
-pkl.close()
+# pkl = open("./data/" + args.DATA + "/item2knowledge.pkl", "rb")
+# item2knowledge = pickle.load(pkl)
+# pkl.close()
+item2knowledge = []
+
+if args.PREPROCESS_DATA:
+    preprocess_dataset(args.SEED)
 
 train_data = pd.read_csv("./data/" + args.DATA + "/pisa.train.csv")
 valid_data = pd.read_csv("./data/" + args.DATA + "/pisa.validation.csv")
