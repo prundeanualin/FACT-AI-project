@@ -123,6 +123,7 @@ def split_data_for_user(user_data):
     test = user_data[valid_end:]
     return train, valid, test
 
+
 grouped = remaining_df.groupby('UserID')
 train_list, valid_list, test_list = zip(*grouped.apply(split_data_for_user))
 
