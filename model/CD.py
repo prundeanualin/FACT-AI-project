@@ -2,7 +2,7 @@ import torch
 import torch.nn as nn
 
 class BaseCD(nn.Module):
-    def __init__(self, args):
+    def __init__(self, args, device):
         super(BaseCD, self).__init__()
         self.user_num = args.USER_NUM
         self.item_num = args.ITEM_NUM
@@ -10,6 +10,7 @@ class BaseCD(nn.Module):
         self.num_features = len(args.FEATURES)
         self.filter_mode = args.FILTER_MODE
         self.criterion = nn.BCELoss()
+        self.device = device
 
     def get_sensitive_filter(self, embed_dim):
         sequential = nn.Sequential(
@@ -18,7 +19,7 @@ class BaseCD(nn.Module):
             nn.Linear(self.knowledge_num, self.knowledge_num),
             nn.ReLU(),
             nn.Linear(self.knowledge_num, embed_dim),
-        ).to("cuda")
+        ).to(self.device)
         return sequential
 
     def apply_filter(self, filter_dict, vectors, mask=None):
@@ -48,8 +49,8 @@ class BaseCD(nn.Module):
 
 
 class IRT(BaseCD):
-    def __init__(self, args):
-        super(IRT, self).__init__(args)
+    def __init__(self, args, device):
+        super(IRT, self).__init__(args, device)
         if self.filter_mode == "combine":
             self.filter_u_dict = nn.ModuleDict(
                 {
@@ -63,9 +64,9 @@ class IRT(BaseCD):
             )
         else:
             assert "error!"
-        self.theta = nn.Embedding(self.user_num, 1).to("cuda")
-        self.a = nn.Embedding(self.item_num, 1).to("cuda")
-        self.b = nn.Embedding(self.item_num, 1).to("cuda")
+        self.theta = nn.Embedding(self.user_num, 1).to(self.device)
+        self.a = nn.Embedding(self.item_num, 1).to(self.device)
+        self.b = nn.Embedding(self.item_num, 1).to(self.device)
         nn.init.xavier_uniform_(self.theta.weight)
         nn.init.xavier_uniform_(self.a.weight)
         nn.init.xavier_uniform_(self.b.weight)
@@ -89,8 +90,8 @@ class IRT(BaseCD):
 
 
 class MIRT(BaseCD):
-    def __init__(self, args):
-        super(MIRT, self).__init__(args)
+    def __init__(self, args, device):
+        super(MIRT, self).__init__(args, device)
         if self.filter_mode == "combine":
             self.filter_u_dict = nn.ModuleDict(
                 {
@@ -107,9 +108,9 @@ class MIRT(BaseCD):
             )
         else:
             assert "error!"
-        self.theta = nn.Embedding(self.user_num, args.LATENT_NUM).to("cuda")
-        self.a = nn.Embedding(self.item_num, args.LATENT_NUM).to("cuda")
-        self.b = nn.Embedding(self.item_num, 1).to("cuda")
+        self.theta = nn.Embedding(self.user_num, args.LATENT_NUM).to(self.device)
+        self.a = nn.Embedding(self.item_num, args.LATENT_NUM).to(self.device)
+        self.b = nn.Embedding(self.item_num, 1).to(self.device)
         nn.init.xavier_uniform_(self.theta.weight)
         nn.init.xavier_uniform_(self.a.weight)
         nn.init.xavier_uniform_(self.b.weight)
@@ -132,21 +133,21 @@ class MIRT(BaseCD):
         return out
 
 class NCDM(BaseCD):
-    def __init__(self, args):
-        super(NCDM, self).__init__(args)
+    def __init__(self, args, device):
+        super(NCDM, self).__init__(args, device)
         self.knowledge_dim = args.KNOWLEDGE_NUM
         self.prednet_input_len = self.knowledge_dim
         self.prednet_len1, self.prednet_len2 = 512, 256
-        self.theta = nn.Embedding(self.user_num, self.knowledge_dim).to("cuda")
-        self.k_difficulty = nn.Embedding(self.item_num, self.knowledge_dim).to("cuda")
-        self.e_difficulty = nn.Embedding(self.item_num, 1).to("cuda")
+        self.theta = nn.Embedding(self.user_num, self.knowledge_dim).to(self.device)
+        self.k_difficulty = nn.Embedding(self.item_num, self.knowledge_dim).to(self.device)
+        self.e_difficulty = nn.Embedding(self.item_num, 1).to(self.device)
         self.prednet_full1 = nn.Linear(self.prednet_input_len, self.prednet_len1).to(
-            "cuda"
+            self.device
         )
-        self.drop_1 = nn.Dropout(p=0.5).to("cuda")
-        self.prednet_full2 = nn.Linear(self.prednet_len1, self.prednet_len2).to("cuda")
-        self.drop_2 = nn.Dropout(p=0.5).to("cuda")
-        self.prednet_full3 = nn.Linear(self.prednet_len2, 1).to("cuda")
+        self.drop_1 = nn.Dropout(p=0.5).to(self.device)
+        self.prednet_full2 = nn.Linear(self.prednet_len1, self.prednet_len2).to(self.device)
+        self.drop_2 = nn.Dropout(p=0.5).to(self.device)
+        self.prednet_full3 = nn.Linear(self.prednet_len2, 1).to(self.device)
         nn.init.xavier_uniform_(self.theta.weight)
         nn.init.xavier_uniform_(self.k_difficulty.weight)
         nn.init.xavier_uniform_(self.e_difficulty.weight)

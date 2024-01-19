@@ -3,10 +3,11 @@ import torch.nn as nn
 
 
 class Discriminator(nn.Module):
-    def __init__(self, args, embed_dim):
+    def __init__(self, args, embed_dim, device):
         super().__init__()
         self.embed_dim = embed_dim
         self.criterion = nn.BCELoss()
+        self.device = device
 
         self.network = nn.Sequential(
             nn.Linear(self.embed_dim, args.LATENT_NUM),
@@ -14,7 +15,7 @@ class Discriminator(nn.Module):
             nn.Linear(args.LATENT_NUM, args.LATENT_NUM),
             nn.ReLU(),
             nn.Linear(args.LATENT_NUM, 1),
-        ).to("cuda")
+        ).to(self.device)
 
     def forward(self, embeddings, labels):
         output = self.predict(embeddings)

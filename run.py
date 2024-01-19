@@ -47,10 +47,9 @@ args.add_argument("-LR_DISC", default=0.01, type=float)
 args.add_argument("-USE_NOFEATURE", default=False, type=bool)
 args.add_argument("-NO_FEATURE", default=0.2, type=float)
 args.add_argument("-PREPROCESS_DATA", default=False, type=bool)
+args.add_argument("-DEVICE", default='cuda', type=str)
 args = args.parse_args()
 
-
-os.environ["CUDA_VISIBLE_DEVICES"] = str(args.CUDA)
 torch.manual_seed(args.SEED)
 random.seed(args.SEED)
 np.random.seed(args.SEED)
@@ -105,6 +104,13 @@ def attacker_transform(user, feature):
 
 
 print("load data")
+if args.DEVICE == 'cuda' and torch.cuda.is_available():
+    print("Using cuda")
+    os.environ["CUDA_VISIBLE_DEVICES"] = str(args.CUDA)
+    device = torch.device("cuda")
+else:
+    print("Using cpu")
+    device = torch.device("cpu")
 
 # pkl = open("./data/" + args.DATA + "/item2knowledge.pkl", "rb")
 # item2knowledge = pickle.load(pkl)
@@ -180,14 +186,14 @@ train_total = [train_nofeature, train]
 
 print("train model")
 
-cdm = eval(args.MODEL)(args)
+cdm = eval(args.MODEL)(args, device)
 trainer = torch.optim.Adam(cdm.parameters(), args.LR)
 cdm.train()
 
 if args.MODEL == "IRT":
     discriminators = {}
     for feature in args.FEATURES:
-        discriminators[feature] = Discriminator(args, 1).cuda()
+        discriminators[feature] = Discriminator(args, 1, device).to(device)
         discriminators[feature].train()
     discriminator_trainers = {
         feature: torch.optim.Adam(discriminators[feature].parameters(), args.LR_DISC)
@@ -196,7 +202,7 @@ if args.MODEL == "IRT":
 if args.MODEL == "MIRT":
     discriminators = {}
     for feature in args.FEATURES:
-        discriminators[feature] = Discriminator(args, args.LATENT_NUM).cuda()
+        discriminators[feature] = Discriminator(args, args.LATENT_NUM, device).to(device)
         discriminators[feature].train()
     discriminator_trainers = {
         feature: torch.optim.Adam(discriminators[feature].parameters(), args.LR_DISC)
@@ -205,7 +211,7 @@ if args.MODEL == "MIRT":
 if args.MODEL == "NCDM":
     discriminators = {}
     for feature in args.FEATURES:
-        discriminators[feature] = Discriminator(args, args.KNOWLEDGE_NUM).cuda()
+        discriminators[feature] = Discriminator(args, args.KNOWLEDGE_NUM, device).to(device)
         discriminators[feature].train()
     discriminator_trainers = {
         feature: torch.optim.Adam(discriminators[feature].parameters(), args.LR_DISC)
@@ -219,11 +225,11 @@ for epoch in range(args.EPOCH):
                 user_id, item_id, response, feature_data = batch_data
             else:
                 user_id, item_id, knowledge, response, feature_data = batch_data
-                knowledge = knowledge.to("cuda")
-            user_id = user_id.to("cuda")
-            item_id = item_id.to("cuda")
-            response = response.to("cuda")
-            feature_data = feature_data.to("cuda")
+                knowledge = knowledge.to(device)
+            user_id = user_id.to(device)
+            item_id = item_id.to(device)
+            response = response.to(device)
+            feature_data = feature_data.to(device)
             mask = np.random.randint(len(args.FEATURES))
             if args.MODEL in ["MCD", "IRT", "MIRT"]:
                 out = cdm(user_id, item_id, response, mask)
@@ -308,10 +314,10 @@ for epoch in range(args.EPOCH):
             user_id, item_id, response, _ = batch_data
         elif args.MODEL in ["NCDM"]:
             user_id, item_id, knowledge, response, _ = batch_data
-            knowledge = knowledge.to("cuda")
-        user_id = user_id.to("cuda")
-        item_id = item_id.to("cuda")
-        response = response.to("cuda")
+            knowledge = knowledge.to(device)
+        user_id = user_id.to(device)
+        item_id = item_id.to(device)
+        response = response.to(device)
         if args.MODEL in ["MCD", "IRT", "MIRT"]:
             out = cdm.predict(user_id, item_id)
         elif args.MODEL in ["NCDM"]:
@@ -329,7 +335,7 @@ for epoch in range(args.EPOCH):
     if args.MODEL == "IRT":
         attackers = {}
         for feature in args.FEATURES:
-            attackers[feature] = Discriminator(args, 1)
+            attackers[feature] = Discriminator(args, 1, device)
             attackers[feature].train()
         attacker_trainers = {
             feature: torch.optim.Adam(attackers[feature].parameters(), args.LR_DISC)
@@ -338,7 +344,7 @@ for epoch in range(args.EPOCH):
     if args.MODEL == "MIRT":
         attackers = {}
         for feature in args.FEATURES:
-            attackers[feature] = Discriminator(args, args.LATENT_NUM)
+            attackers[feature] = Discriminator(args, args.LATENT_NUM, device)
             attackers[feature].train()
         attacker_trainers = {
             feature: torch.optim.Adam(attackers[feature].parameters(), args.LR_DISC)
@@ -347,7 +353,7 @@ for epoch in range(args.EPOCH):
     if args.MODEL == "NCDM":
         attackers = {}
         for feature in args.FEATURES:
-            attackers[feature] = Discriminator(args, args.KNOWLEDGE_NUM)
+            attackers[feature] = Discriminator(args, args.KNOWLEDGE_NUM, device)
             attackers[feature].train()
         attacker_trainers = {
             feature: torch.optim.Adam(attackers[feature].parameters(), args.LR_DISC)
@@ -365,9 +371,9 @@ for epoch in range(args.EPOCH):
     for epoch in range(args.EPOCH_ATTACKER):
         for batch_data in tqdm(attacker_train, "Epoch %s" % epoch):
             user_id, feature_label = batch_data
-            user_id = user_id.to("cuda")
+            user_id = user_id.to(device)
             for i, feature in enumerate(args.FEATURES):
-                label = feature_label[:, i].to("cuda")
+                label = feature_label[:, i].to(device)
                 u_embedding = u_embeddings[user_id, :]
                 attacker_trainers[feature].zero_grad()
                 loss = attackers[feature](u_embedding, label)
@@ -382,7 +388,7 @@ for epoch in range(args.EPOCH):
             attackers[feature].eval()
         for batch_data in tqdm(attacker_test, "Test"):
             user_id, feature_label = batch_data
-            user_id = user_id.to("cuda")
+            user_id = user_id.to(device)
             for i, feature in enumerate(args.FEATURES):
                 u_embedding = u_embeddings[user_id, :]
                 pred = attackers[feature].predict(u_embedding).cpu()
