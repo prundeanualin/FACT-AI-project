@@ -1,42 +1,101 @@
+import torch
+import torch.nn as nn
+import torch.optim as optim
+from torch.utils.data import DataLoader, TensorDataset
+from sklearn.model_selection import train_test_split
+from tqdm import tqdm
+
+# Sample code to load data
 import pandas as pd
-from recommenders.models.deeprec.models.graphrec.lightgcn import LightGCN
-from recommenders.models.deeprec.DataModel.ImplicitCF import ImplicitCF
-from recommenders.models.deeprec.deeprec_utils import HParams
 
 use_test_data = False  # Change this to True when done with hyperparameter-tuning, use False for validation data
 
 base_path = "data/ml-1m/"
 test_valid_file = base_path + "test.csv" if use_test_data else base_path + "validation.csv"
-train_file = base_path + "train.csv"
-model_dir = 'lightGCN_models'
+train_data = base_path + "train.csv"
 
-train = pd.read_csv(train_file)
-test = pd.read_csv(test_valid_file)
+# Assuming your data is in a CSV file
+file_path = 'your_data.csv'
 
-# Convert 'Rating' column to binary
-train['Rating'] = (train['Rating'] > 1).astype(int)
-test['Rating'] = (test['Rating'] > 1).astype(int)
+non_split_data = pd.read_csv(base_path + "merged_dataset.csv")
 
-data_object = ImplicitCF(train, test=test, adj_dir=None, col_user='UserID', col_item='MovieID', col_rating='Rating',
-                         col_prediction='prediction', seed=None)
+# Assume you have a user-item matrix with rows as UserIDs, columns as MovieIDs, and values as Ratings
+# You may need to convert your data into this format
+user_item_matrix = non_split_data.pivot(index='UserID', columns='MovieID', values='Rating').fillna(0)
 
-hparams_dict = {
-    'learning_rate': 0.001,
-    'embed_size': 8,        # Embedding size, e.g. 64 or 128.
-    'batch_size': 256,
-    'n_layers': 3,           # Number of GCN layers; often 2 or 3.
-    'decay': 0.0001,         # Regularization term to prevent overfitting.
-    'eval_epoch': 5,         # Frequency of evaluation during training.
-    'top_k': 10,             # Number of top recommendations to consider.
-    'save_model': True,      # Whether to save the model after training.
-    'save_epoch': 5,         # Frequency of saving the model.
-    'metrics': ['ndcg', 'precision', 'recall', 'map'],  # Evaluation metrics.
-    'MODEL_DIR': model_dir,  # Directory to save the model.
-    'epochs': 50             # Total number of training epochs.
-}
+# Convert the user-item matrix to PyTorch tensor
+user_item_tensor = torch.tensor(user_item_matrix.values, dtype=torch.float32)
 
-hparams_object = HParams(hparams_dict=hparams_dict)
+# Load the validation set
+val_data = pd.read_csv(base_path + "validation.csv")
 
-model = LightGCN(data=data_object, hparams=hparams_object)
+# Get user and item inputs for predictions
+user_input = val_data['UserID'].values
+item_input = val_data['MovieID'].values
 
-model.fit()
+# Define the LightGCN model
+class LightGCN(nn.Module):
+
+    def __init__(self, num_users, num_items, embedding_dim):
+        super(LightGCN, self).__init__()
+        self.embedding_dim = embedding_dim
+
+        # User and item embeddings
+        self.user_embedding = nn.Embedding(num_users, embedding_dim)
+        self.item_embedding = nn.Embedding(num_items, embedding_dim)
+
+    def forward(self, user, item):
+        user_emb = self.user_embedding(user)
+        item_emb = self.item_embedding(item)
+
+        # LightGCN does not use any additional layers, just element-wise product
+        interaction = torch.mul(user_emb, item_emb)
+
+        return interaction
+
+# Initialize the model
+num_users, num_items = user_item_tensor.shape
+embedding_dim = 64  # You can adjust this based on your preference
+model = LightGCN(num_users, num_items, embedding_dim)
+
+# Loss and optimizer
+criterion = nn.MSELoss()
+optimizer = optim.Adam(model.parameters(), lr=0.001)
+
+# Training loop
+num_epochs = 10
+
+for epoch in range(num_epochs):
+    model.train()
+    for user, item in tqdm(train_data.nonzero()):
+        rating = train_data[user, item]
+
+        user = torch.tensor(user)
+        item = torch.tensor(item)
+
+        # Forward pass
+        prediction = model(user, item)
+
+        # Compute the loss
+        loss = criterion(prediction, rating)
+
+        # Backward pass and optimization
+        optimizer.zero_grad()
+        loss.backward()
+        optimizer.step()
+
+    # Validation
+    model.eval()
+    with torch.no_grad():
+        val_predictions = model(*val_data.nonzero())
+        val_loss = criterion(val_predictions, val_data[val_data.nonzero()])
+
+    print(f'Epoch [{epoch+1}/{num_epochs}], Loss: {loss.item():.4f}, Validation Loss: {val_loss.item():.4f}')
+
+# Test the model
+# model.eval()
+# with torch.no_grad():
+#     test_predictions = model(*test_data.nonzero())
+#     test_loss = criterion(test_predictions, test_data[test_data.nonzero()])
+#
+# print(f'Test Loss: {test_loss.item():.4f}')
