@@ -25,22 +25,12 @@ item_input = validation_data['MovieID'].values
 
 # Predict ratings
 predicted_ratings = model.predict(user_input, item_input, is_list=True)
-print(predicted_ratings)
 
 # Actual ratings
 actual_ratings = validation_data['Rating'].values
 if binary:
     actual_ratings = (actual_ratings > 1).astype(int)
-print(actual_ratings)
 
 # Calculate RMSE
 rmse = np.sqrt(mean_squared_error(actual_ratings, predicted_ratings))
 print("RMSE on Validation Set:", rmse)
-
-users = [1, 2, 3]
-
-# Get user embeddings
-user_emb = get_user_embeddings(model, users)
-
-print(user_emb)
-

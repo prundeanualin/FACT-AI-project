@@ -1,4 +1,3 @@
-
 from recommenders.models.ncf.ncf_singlenode import NCF
 from recommenders.models.ncf.dataset import Dataset as NCFDataset
 import pandas as pd
@@ -145,9 +144,27 @@ def get_user_embeddings(model, user_ids):
     return user_emb_evaluated
 
 
-users = [1, 2, 3]
+def get_movie_embeddings(model, movie_ids):
+    item_input = np.array([model.item2id[x] for x in movie_ids])
+    item_input_tensor = tf.convert_to_tensor(item_input, dtype=tf.int32)
 
-# Get user embeddings
-user_emb = get_user_embeddings(model, users)
+    # Get user embeddings
+    movie_embs = tf.nn.embedding_lookup(params=model.embedding_mlp_Q, ids=item_input_tensor)
 
-print(user_emb)
+    # Compute and retrieve the values of movie embeddings
+    with model.sess.as_default():
+        movie_embs = movie_embs.eval()
+
+    return movie_embs
+
+
+# users = [_ for _ in range(1, 6041)]
+#
+# # Get user embeddings
+# user_emb = get_user_embeddings(model, users)
+#
+# unique_movies = nonsplit_data['MovieID'].unique()
+#
+# movie_emb = get_movie_embeddings(model, unique_movies)
+
+
