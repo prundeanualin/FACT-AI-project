@@ -6,7 +6,9 @@ channels:
 dependencies:
   - python=3.9
   - pip=22.2.2
+  - sfe1ed40::recommenders
   - pip:
+      - tensorflow
       - torch
       - pandas
       - numpy

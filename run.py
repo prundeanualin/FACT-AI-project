@@ -37,8 +37,8 @@ args.add_argument("-BATCH_SIZE", default=8192, type=int)
 args.add_argument("-EPOCH", default=10, type=int)
 args.add_argument("-EPOCH_DISCRIMINATOR", default=10, type=int)
 args.add_argument("-EPOCH_ATTACKER", default=10, type=int)
-args.add_argument("-USER_NUM", default=358415, type=int)
-args.add_argument("-ITEM_NUM", default=183, type=int)
+args.add_argument("-USER_NUM", default=462916, type=int)
+args.add_argument("-ITEM_NUM", default=593, type=int)
 args.add_argument("-KNOWLEDGE_NUM", default=16, type=int)
 args.add_argument("-LATENT_NUM", default=16, type=int)
 args.add_argument("-MODEL", default="NCDM", type=str)
@@ -50,6 +50,7 @@ args.add_argument("-PREPROCESS_DATA", default=False, type=bool)
 args.add_argument("-DEVICE", default='cuda', type=str)
 args = args.parse_args()
 
+os.environ["CUDA_VISIBLE_DEVICES"] = str(args.CUDA)
 torch.manual_seed(args.SEED)
 random.seed(args.SEED)
 np.random.seed(args.SEED)
@@ -105,11 +106,12 @@ def attacker_transform(user, feature):
 
 print("load data")
 if args.DEVICE == 'cuda' and torch.cuda.is_available():
-    print("Using cuda")
-    os.environ["CUDA_VISIBLE_DEVICES"] = str(args.CUDA)
+    print("--Using cuda")
+    print("--Number of GPU's available: ", torch.cuda.device_count())
+    print("--Cuda device name: ", torch.cuda.get_device_name(0))
     device = torch.device("cuda")
 else:
-    print("Using cpu")
+    print("--Using cpu")
     device = torch.device("cpu")
 
 # pkl = open("./data/" + args.DATA + "/item2knowledge.pkl", "rb")
@@ -185,9 +187,11 @@ train_total = [train_nofeature, train]
 
 
 print("train model")
+start_time = time.time()
 
 cdm = eval(args.MODEL)(args, device)
 trainer = torch.optim.Adam(cdm.parameters(), args.LR)
+cdm.to(device)
 cdm.train()
 
 if args.MODEL == "IRT":
@@ -405,3 +409,5 @@ for epoch in range(args.EPOCH):
         print("auc:", roc_auc_score(feature_true[feature], feature_pred[feature]))
 
 print("finish")
+end_time = time.time()
+print("Total duration: ", end_time - start_time)
