@@ -47,11 +47,21 @@ print()
 # 50: "50-55"
 # 56: "56+"
 
-# Binary encoding for Gender
+# Convert 'Gender' to 0 for 'F' and 1 for 'M'
 users['Gender'] = users['Gender'].map({'F': 0, 'M': 1})
 
-# One-hot encoding for Age
-users = pd.get_dummies(users, columns=['Age'], prefix='Age')
+# Get a sorted list of unique ages
+unique_ages = sorted(users['Age'].unique())
+
+# Create a mapping from each age to its index in the sorted unique list
+age_mapping = {age: idx for idx, age in enumerate(unique_ages)}
+
+# Apply the mapping to the 'Age' column
+users['Age'] = users['Age'].map(age_mapping)
+
+# Display the modified DataFrame
+print(users.head())
+
 
 # Drop unnecessary cols
 users = users.drop(['Zip-code'], axis=1)
@@ -68,7 +78,7 @@ print("Length final df: " + str(len(final_df)))
 print("Length ratings df: " + str(len(ratings)))
 
 print("Writing the final processed dataframe to csv...")
-final_df.to_csv(base_path + "merged_dataset.csv")
+final_df.to_csv(base_path + "merged_dataset.csv", index=False)
 
 # OLD CODE
 # # Splitting the final df into train, test, valid
@@ -132,6 +142,10 @@ train_data = pd.concat([initial_train_data] + list(train_list)).reset_index(drop
 valid_data = pd.concat(valid_list).reset_index(drop=True)
 test_data = pd.concat(test_list).reset_index(drop=True)
 
+train_data = train_data.drop(['Timestamp'], axis=1)
+valid_data = valid_data.drop(['Timestamp'], axis=1)
+test_data = test_data.drop(['Timestamp'], axis=1)
+
 # Sort the sets by UserID
 train_data = train_data.sort_values(by='UserID')
 valid_data = valid_data.sort_values(by='UserID')
@@ -158,3 +172,22 @@ unique_users_train = set(train_data['UserID'].unique())
 assert unique_users_final_df.issubset(unique_users_train), "Not all user IDs in final_df are in train_data"
 
 print("Assertion passed: All unique movies and user IDs in final_df are present in train_data.")
+
+# Now split the data for attackers into train and test:
+final_df = final_df.drop(['Timestamp'], axis=1)
+
+print(final_df.head())
+
+# Drop the 'MovieID' column
+collapsed_df = final_df.drop(['MovieID', 'Rating'], axis=1)
+
+# Drop duplicate rows based on 'UserID'
+collapsed_df = collapsed_df.drop_duplicates(subset='UserID')
+
+print(collapsed_df.head())
+print(collapsed_df['UserID'].unique())
+
+attacker_train_data, attacker_test_data = train_test_split(collapsed_df, test_size=0.2, random_state=42)
+
+attacker_train_data.to_csv(base_path + "attacker_train.csv", index=False)
+attacker_test_data.to_csv(base_path + "attacker_test.csv", index=False)
