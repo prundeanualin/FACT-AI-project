@@ -135,6 +135,7 @@ def postprocess_columns(df, cognitive_items):
     df.loc[:, 'item_id'] = df['item_id'].map(cognitive_id_vocab)
     student_ids = df['user_id'].unique().tolist()
     student_id_vocab = build_id_vocab(student_ids)
+    df['user_old_id'] = df['user_id']
     df.loc[:, 'user_id'] = df['user_id'].map(student_id_vocab)
     return df
 
@@ -238,7 +239,6 @@ def build_item_vocab():
     return vocab_df
 
 # preprocess_dataset(42)
-
 # df = pd.read_csv('data/pisa2015/dataset.csv')
 # items = df['item_id'].unique().tolist()
 # students = df['user_id'].unique().tolist()

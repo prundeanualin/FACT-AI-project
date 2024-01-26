@@ -10,7 +10,7 @@ dependencies:
   - pip:
       - tensorflow
       - torch
-      - pandas
+      - pandas==1.5.3
       - numpy
       - scikit-learn
       - tqdm

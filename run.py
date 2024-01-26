@@ -19,7 +19,8 @@ from sklearn.metrics import (
 )
 import os
 import time
-from preprocess_pisa_dataset import preprocess_dataset
+from preprocess_dataset_pisa import preprocess_dataset
+from utils import seed_experiments
 
 args = argparse.ArgumentParser()
 args.add_argument("-DATA", default="pisa2015", type=str)
@@ -29,7 +30,7 @@ args.add_argument(
     default=["OECD", "GENDER", "EDU", "ECONOMIC"],
     type=list,
 )  # ["OECD", "GENDER", "EDU", "ECONOMIC"]
-args.add_argument("-FAIRNESS_RATIO", default=1.0, type=float)
+args.add_argument("-FAIRNESS_RATIO", default=2.0, type=float)
 args.add_argument("-FAIRNESS_RATIO_NOFEATURE", default=0.5, type=float)
 args.add_argument("-CUDA", default=2, type=int)
 args.add_argument("-SEED", default=4869, type=int)
@@ -44,16 +45,14 @@ args.add_argument("-LATENT_NUM", default=16, type=int)
 args.add_argument("-MODEL", default="NCDM", type=str)
 args.add_argument("-LR", default=0.001, type=float)
 args.add_argument("-LR_DISC", default=0.01, type=float)
-args.add_argument("-USE_NOFEATURE", default=False, type=bool)
+args.add_argument("-USE_NOFEATURE", default=True, type=bool)
 args.add_argument("-NO_FEATURE", default=0.2, type=float)
 args.add_argument("-PREPROCESS_DATA", default=False, type=bool)
 args.add_argument("-DEVICE", default='cuda', type=str)
 args = args.parse_args()
 
 os.environ["CUDA_VISIBLE_DEVICES"] = str(args.CUDA)
-torch.manual_seed(args.SEED)
-random.seed(args.SEED)
-np.random.seed(args.SEED)
+seed_experiments(args.SEED)
 model_name = args.DATA + args.MODEL + args.FILTER_MODE + str(args.FAIRNESS_RATIO)
 print(args)
 print(model_name)
@@ -328,6 +327,7 @@ for epoch in range(args.EPOCH):
             out = cdm.predict(user_id, item_id, knowledge)
         y_pred.extend(out["prediction"].tolist())
         y_true.extend(response.tolist())
+    print("-- Model evaluation after training model + filter")
     print("eval:{:d}".format(epoch))
     print("acc:{:.4f}".format(accuracy_score(y_true, np.array(y_pred) > 0.5)))
     print("auc:{:.4f}".format(roc_auc_score(y_true, y_pred)))
@@ -404,10 +404,11 @@ for epoch in range(args.EPOCH):
         for feature in args.FEATURES:
             attackers[feature].train()
 
+    print("-- Attacker final evaluation after training")
     for feature in args.FEATURES:
         print(feature)
         print("auc:", roc_auc_score(feature_true[feature], feature_pred[feature]))
 
-print("finish")
+print("Finish")
 end_time = time.time()
 print("Total duration: ", end_time - start_time)

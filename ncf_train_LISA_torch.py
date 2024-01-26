@@ -18,7 +18,7 @@ from sklearn.metrics import (
     f1_score
 )
 from sklearn.preprocessing import label_binarize
-
+from utils import seed_experiments
 
 # Arguments
 args = argparse.ArgumentParser()
@@ -47,10 +47,7 @@ args.add_argument("-MISSING_RATIO", default=0.2, type=float)
 args.add_argument("-DEVICE", default='cuda', type=str)
 args = args.parse_args()
 
-# Set seeds
-torch.manual_seed(args.SEED)
-random.seed(args.SEED)
-np.random.seed(args.SEED)
+seed_experiments(args.SEED)
 model_name = args.MODEL
 print(args)
 print(f"Model: {model_name}")
@@ -108,8 +105,6 @@ def split_dataset(data, missing_ratio, seed):
     Returns:
     tuple: Two DataFrames, train_data and train_data_nofeature.
     """
-    # Set the seed
-    np.random.seed(seed)
 
     # Calculate the number of records needed for the desired ratio
     target_record_count = int(len(data) * (1 - missing_ratio))
