@@ -3,6 +3,9 @@ import torch.nn as nn
 import torch.optim as optim
 from torch.utils.data import DataLoader, TensorDataset
 from sklearn.model_selection import train_test_split
+from recommenders.models.deeprec.DataModel.ImplicitCF import ImplicitCF
+from recommenders.models.deeprec.models.graphrec.lightgcn import LightGCN
+from recommenders.models.deeprec.deeprec_utils import HParams
 from tqdm import tqdm
 
 # Sample code to load data
@@ -11,91 +14,74 @@ import pandas as pd
 use_test_data = False  # Change this to True when done with hyperparameter-tuning, use False for validation data
 
 base_path = "data/ml-1m/"
-test_valid_file = base_path + "test.csv" if use_test_data else base_path + "validation.csv"
-train_data = base_path + "train.csv"
+test_file = base_path + "test.csv"
+validation_file = base_path + "validation.csv"
+train_file = base_path + "train.csv"
+base_model_path = 'data/ml-1m/lightgcn/'
 
-# Assuming your data is in a CSV file
-file_path = 'your_data.csv'
+print("Loading the datasets...")
+renaming_columns = {
+    "UserID": "userID",
+    "MovieID": "itemID",
+    "Rating": "rating"
+}
+train_df = pd.read_csv(train_file)
+print("Length of the training set: ", len(train_df))
+train_df.rename(columns=renaming_columns, inplace=True)
+validation_df = pd.read_csv(validation_file)
+validation_df.rename(columns=renaming_columns, inplace=True)
+test_df = pd.read_csv(test_file)
+test_df.rename(columns=renaming_columns, inplace=True)
 
-non_split_data = pd.read_csv(base_path + "merged_dataset.csv")
+seed = 42
 
-# Assume you have a user-item matrix with rows as UserIDs, columns as MovieIDs, and values as Ratings
-# You may need to convert your data into this format
-user_item_matrix = non_split_data.pivot(index='UserID', columns='MovieID', values='Rating').fillna(0)
+data_model = ImplicitCF(train_df, validation_df, seed=seed)
 
-# Convert the user-item matrix to PyTorch tensor
-user_item_tensor = torch.tensor(user_item_matrix.values, dtype=torch.float32)
+# self.epochs = hparams.epochs
+# self.lr = hparams.learning_rate
+# self.emb_dim = hparams.embed_size
+# self.batch_size = hparams.batch_size
+# self.n_layers = hparams.n_layers
+# self.decay = hparams.decay
+# self.eval_epoch = hparams.eval_epoch
+# self.top_k = hparams.top_k
+# self.save_model = hparams.save_model
+# self.save_epoch = hparams.save_epoch
+# self.metrics = hparams.metrics
+# self.model_dir = hparams.MODEL_DIR
 
-# Load the validation set
-val_data = pd.read_csv(base_path + "validation.csv")
+epochs = 1000
+save_epoch = 5
+eval_epoch = 2
+learning_rate = 0.001
+embed_size = 64
+batch_size = 2048
+n_layers = 3
+decay = 1e-4
+top_k = 20
+save_model = True
+metrics = ['precision'] # metric_options = ["map", "ndcg", "precision", "recall"]
+MODEL_DIR = base_model_path
 
-# Get user and item inputs for predictions
-user_input = val_data['UserID'].values
-item_input = val_data['MovieID'].values
+hparams = {
+    'epochs': epochs,
+    'learning_rate': learning_rate,
+    'embed_size': embed_size,
+    'batch_size': batch_size,
+    'n_layers': n_layers,
+    'decay': decay,
+    'eval_epoch': eval_epoch,
+    'top_k': top_k,
+    'save_model': save_model,
+    'save_epoch': save_epoch,
+    'metrics': metrics,
+    'MODEL_DIR': MODEL_DIR
+}
 
-# Define the LightGCN model
-class LightGCN(nn.Module):
+user_embedding_file = base_model_path + 'user_embedding.csv'
+item_embedding_file = base_model_path + 'item_embedding.csv'
 
-    def __init__(self, num_users, num_items, embedding_dim):
-        super(LightGCN, self).__init__()
-        self.embedding_dim = embedding_dim
-
-        # User and item embeddings
-        self.user_embedding = nn.Embedding(num_users, embedding_dim)
-        self.item_embedding = nn.Embedding(num_items, embedding_dim)
-
-    def forward(self, user, item):
-        user_emb = self.user_embedding(user)
-        item_emb = self.item_embedding(item)
-
-        # LightGCN does not use any additional layers, just element-wise product
-        interaction = torch.mul(user_emb, item_emb)
-
-        return interaction
-
-# Initialize the model
-num_users, num_items = user_item_tensor.shape
-embedding_dim = 64  # You can adjust this based on your preference
-model = LightGCN(num_users, num_items, embedding_dim)
-
-# Loss and optimizer
-criterion = nn.MSELoss()
-optimizer = optim.Adam(model.parameters(), lr=0.001)
-
-# Training loop
-num_epochs = 10
-
-for epoch in range(num_epochs):
-    model.train()
-    for user, item in tqdm(train_data.nonzero()):
-        rating = train_data[user, item]
-
-        user = torch.tensor(user)
-        item = torch.tensor(item)
-
-        # Forward pass
-        prediction = model(user, item)
-
-        # Compute the loss
-        loss = criterion(prediction, rating)
-
-        # Backward pass and optimization
-        optimizer.zero_grad()
-        loss.backward()
-        optimizer.step()
-
-    # Validation
-    model.eval()
-    with torch.no_grad():
-        val_predictions = model(*val_data.nonzero())
-        val_loss = criterion(val_predictions, val_data[val_data.nonzero()])
-
-    print(f'Epoch [{epoch+1}/{num_epochs}], Loss: {loss.item():.4f}, Validation Loss: {val_loss.item():.4f}')
-
-# Test the model
-# model.eval()
-# with torch.no_grad():
-#     test_predictions = model(*test_data.nonzero())
-#     test_loss = criterion(test_predictions, test_data[test_data.nonzero()])
-#
-# print(f'Test Loss: {test_loss.item():.4f}')
+model = LightGCN(hparams=HParams(hparams), data=data_model, seed=seed)
+print("Training the model...")
+model.fit()
+model.infer_embedding(user_file=user_embedding_file, item_file=item_embedding_file)
