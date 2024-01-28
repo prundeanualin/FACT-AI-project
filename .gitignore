@@ -3,3 +3,4 @@ model/__pycache__
 .idea
 data
 __pycache__
+wandb

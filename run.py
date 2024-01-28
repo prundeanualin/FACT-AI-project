@@ -22,6 +22,8 @@ import time
 from preprocess_dataset_pisa import preprocess_dataset
 from utils import seed_experiments
 
+import wandb
+
 args = argparse.ArgumentParser()
 args.add_argument("-DATA", default="pisa2015", type=str)
 args.add_argument("-FILTER_MODE", default="separate", type=str)
@@ -35,9 +37,9 @@ args.add_argument("-FAIRNESS_RATIO_NOFEATURE", default=0.5, type=float)
 args.add_argument("-CUDA", default=2, type=int)
 args.add_argument("-SEED", default=4869, type=int)
 args.add_argument("-BATCH_SIZE", default=8192, type=int)
-args.add_argument("-EPOCH", default=10, type=int)
-args.add_argument("-EPOCH_DISCRIMINATOR", default=10, type=int)
-args.add_argument("-EPOCH_ATTACKER", default=10, type=int)
+args.add_argument("-EPOCH", default=2, type=int)
+args.add_argument("-EPOCH_DISCRIMINATOR", default=2, type=int)
+args.add_argument("-EPOCH_ATTACKER", default=2, type=int)
 args.add_argument("-USER_NUM", default=462916, type=int)
 args.add_argument("-ITEM_NUM", default=593, type=int)
 args.add_argument("-KNOWLEDGE_NUM", default=16, type=int)
@@ -53,10 +55,31 @@ args = args.parse_args()
 
 os.environ["CUDA_VISIBLE_DEVICES"] = str(args.CUDA)
 seed_experiments(args.SEED)
-model_name = args.DATA + args.MODEL + args.FILTER_MODE + str(args.FAIRNESS_RATIO)
+model_name = f"{args.DATA}_{args.MODEL}_{args.FILTER_MODE}_λ2:{args.FAIRNESS_RATIO}_λ3:{args.FAIRNESS_RATIO_NOFEATURE}_{args.SEED}"
 print(args)
 print(model_name)
 
+wandb.init(
+    project="FACT-fairlisa",
+    name=model_name,
+    config={
+        "dataset": args.DATA,
+        "model": args.MODEL,
+        "filter_mode": args.FILTER_MODE,
+        "λ_2": args.FAIRNESS_RATIO,
+        "λ_3": args.FAIRNESS_RATIO_NOFEATURE,
+        "ratio_data_without_sensitive_features": args.NO_FEATURE,
+        "seed": args.SEED,
+        "knowledge_dimension": args.KNOWLEDGE_NUM,
+        "latent_dimension": args.LATENT_NUM,
+        "batch_size": args.BATCH_SIZE,
+        "epochs_cd_model": args.EPOCH,
+        "lr_cd_model": args.LR,
+        "epochs_discriminator": args.EPOCH_DISCRIMINATOR,
+        "epochs_attacker": args.EPOCH_ATTACKER,
+        "lr_discriminator": args.LR_DISC
+    }
+)
 
 def transform(user, item, score, feature, nofeature=False):
     if nofeature == False:
@@ -183,47 +206,35 @@ elif args.MODEL in ["NCDM"]:
         for data in test_data_group
     ]
 train_total = [train_nofeature, train]
+train_total_description = ["(data w/o sensitive)", "(data w sensitive)"]
 
-
-print("train model")
+print(">> Training model + filter...")
 start_time = time.time()
 
 cdm = eval(args.MODEL)(args, device)
 trainer = torch.optim.Adam(cdm.parameters(), args.LR)
 cdm.to(device)
-cdm.train()
 
-if args.MODEL == "IRT":
-    discriminators = {}
-    for feature in args.FEATURES:
-        discriminators[feature] = Discriminator(args, 1, device).to(device)
-        discriminators[feature].train()
-    discriminator_trainers = {
-        feature: torch.optim.Adam(discriminators[feature].parameters(), args.LR_DISC)
-        for feature in args.FEATURES
-    }
-if args.MODEL == "MIRT":
-    discriminators = {}
-    for feature in args.FEATURES:
-        discriminators[feature] = Discriminator(args, args.LATENT_NUM, device).to(device)
-        discriminators[feature].train()
-    discriminator_trainers = {
-        feature: torch.optim.Adam(discriminators[feature].parameters(), args.LR_DISC)
-        for feature in args.FEATURES
-    }
-if args.MODEL == "NCDM":
-    discriminators = {}
-    for feature in args.FEATURES:
-        discriminators[feature] = Discriminator(args, args.KNOWLEDGE_NUM, device).to(device)
-        discriminators[feature].train()
-    discriminator_trainers = {
-        feature: torch.optim.Adam(discriminators[feature].parameters(), args.LR_DISC)
-        for feature in args.FEATURES
-    }
+discriminator_embedding_dim = {
+    "IRT": 1,
+    "MIRT": args.LATENT_NUM,
+    "NCDM": args.KNOWLEDGE_NUM
+}
+
+discriminators = {}
+for feature in args.FEATURES:
+    discriminators[feature] = Discriminator(args, discriminator_embedding_dim[args.MODEL], device).to(device)
+    discriminators[feature].train()
+discriminator_trainers = {
+    feature: torch.optim.Adam(discriminators[feature].parameters(), args.LR_DISC)
+    for feature in args.FEATURES
+}
 
 for epoch in range(args.EPOCH):
-    for whether_nofeature, train_iter in enumerate(train_total):
-        for batch_data in tqdm(train_iter, "Epoch %s" % epoch):
+    cdm.train()
+
+    for is_data_with_sensitive_features, train_iter in enumerate(train_total):
+        for batch_data in tqdm(train_iter, "Epoch %s " % epoch + train_total_description[is_data_with_sensitive_features]):
             if args.MODEL in ["MCD", "IRT", "MIRT"]:
                 user_id, item_id, response, feature_data = batch_data
             else:
@@ -240,12 +251,12 @@ for epoch in range(args.EPOCH):
                 out = cdm(user_id, item_id, knowledge, response, mask)
             trainer.zero_grad()
             penalty = 0
-            if args.USE_NOFEATURE or whether_nofeature == 1:
+            if args.USE_NOFEATURE or is_data_with_sensitive_features == 1:
                 for i, feature in enumerate(args.FEATURES):
                     if args.FILTER_MODE == "combine":
                         if mask != None:
                             if i == mask:
-                                if whether_nofeature == 1:
+                                if is_data_with_sensitive_features == 1:
                                     penalty -= args.FAIRNESS_RATIO * discriminators[
                                         feature
                                     ](out["u_vector"][0], feature_data[:, i])
@@ -258,7 +269,7 @@ for epoch in range(args.EPOCH):
                                         )
                                     )
                         else:
-                            if whether_nofeature == 1:
+                            if is_data_with_sensitive_features == 1:
                                 penalty -= args.FAIRNESS_RATIO * discriminators[
                                     feature
                                 ](out["u_vector"][i], feature_data[:, i])
@@ -271,7 +282,7 @@ for epoch in range(args.EPOCH):
                                     )
                                 )
                     else:
-                        if whether_nofeature == 1:
+                        if is_data_with_sensitive_features == 1:
                             penalty -= args.FAIRNESS_RATIO * discriminators[feature](
                                 out["u_vector"][i], feature_data[:, i]
                             )
@@ -288,12 +299,12 @@ for epoch in range(args.EPOCH):
             loss.backward()
             trainer.step()
 
-            if args.USE_NOFEATURE or whether_nofeature == 1:
+            if args.USE_NOFEATURE or is_data_with_sensitive_features == 1:
                 for _ in range(args.EPOCH_DISCRIMINATOR):
                     for i, feature in enumerate(args.FEATURES):
                         if args.FILTER_MODE == "combine":
                             if i == mask:
-                                if whether_nofeature == 1:
+                                if is_data_with_sensitive_features == 1:
                                     discriminator_trainers[feature].zero_grad()
                                     disc_loss = args.FAIRNESS_RATIO * discriminators[
                                         feature
@@ -301,7 +312,7 @@ for epoch in range(args.EPOCH):
                                     disc_loss.backward()
                                     discriminator_trainers[feature].step()
                         else:
-                            if whether_nofeature == 1:
+                            if is_data_with_sensitive_features == 1:
                                 discriminator_trainers[feature].zero_grad()
                                 disc_loss = args.FAIRNESS_RATIO * discriminators[
                                     feature
@@ -327,88 +338,81 @@ for epoch in range(args.EPOCH):
             out = cdm.predict(user_id, item_id, knowledge)
         y_pred.extend(out["prediction"].tolist())
         y_true.extend(response.tolist())
-    print("-- Model evaluation after training model + filter")
-    print("eval:{:d}".format(epoch))
+    print(f"-- Model + filter evaluation at epoch {epoch + 1}/{args.EPOCH}")
     print("acc:{:.4f}".format(accuracy_score(y_true, np.array(y_pred) > 0.5)))
     print("auc:{:.4f}".format(roc_auc_score(y_true, y_pred)))
     print("mae:{:.4f}".format(mean_absolute_error(y_true, y_pred)))
     print("mse:{:.4f}".format(mean_squared_error(y_true, y_pred)))
 
-    cdm.train()
+    training_metrics = {
+        "model/acc": accuracy_score(y_true, np.array(y_pred) > 0.5),
+        "model/auc": roc_auc_score(y_true, y_pred),
+        "model/mae": mean_absolute_error(y_true, y_pred),
+        "model/mse": mean_squared_error(y_true, y_pred)
+    }
+    wandb.log(training_metrics)
 
-    if args.MODEL == "IRT":
-        attackers = {}
-        for feature in args.FEATURES:
-            attackers[feature] = Discriminator(args, 1, device)
-            attackers[feature].train()
-        attacker_trainers = {
-            feature: torch.optim.Adam(attackers[feature].parameters(), args.LR_DISC)
-            for feature in args.FEATURES
-        }
-    if args.MODEL == "MIRT":
-        attackers = {}
-        for feature in args.FEATURES:
-            attackers[feature] = Discriminator(args, args.LATENT_NUM, device)
-            attackers[feature].train()
-        attacker_trainers = {
-            feature: torch.optim.Adam(attackers[feature].parameters(), args.LR_DISC)
-            for feature in args.FEATURES
-        }
-    if args.MODEL == "NCDM":
-        attackers = {}
-        for feature in args.FEATURES:
-            attackers[feature] = Discriminator(args, args.KNOWLEDGE_NUM, device)
-            attackers[feature].train()
-        attacker_trainers = {
-            feature: torch.optim.Adam(attackers[feature].parameters(), args.LR_DISC)
-            for feature in args.FEATURES
-        }
 
-    u_embeddings = cdm.apply_filter(cdm.filter_u_dict, cdm.theta.weight).detach()
-    u_embeddings = torch.mean(u_embeddings, dim=0).detach()
+print("\n>> Training the attacker...")
 
-    best_result = {}
-    best_epoch = {}
+attackers = {}
+for feature in args.FEATURES:
+    attackers[feature] = Discriminator(args, discriminator_embedding_dim[args.MODEL], device)
+    attackers[feature].train()
+attacker_trainers = {
+    feature: torch.optim.Adam(attackers[feature].parameters(), args.LR_DISC)
+    for feature in args.FEATURES
+}
+
+u_embeddings = cdm.apply_filter(cdm.filter_u_dict, cdm.theta.weight).detach()
+u_embeddings = torch.mean(u_embeddings, dim=0).detach()
+
+best_result = {}
+best_epoch = {}
+for feature in args.FEATURES:
+    best_result[feature] = 0
+    best_epoch[feature] = 0
+for epoch in range(args.EPOCH_ATTACKER):
+    for batch_data in tqdm(attacker_train, "Epoch %s" % (epoch + 1)):
+        user_id, feature_label = batch_data
+        user_id = user_id.to(device)
+        for i, feature in enumerate(args.FEATURES):
+            label = feature_label[:, i].to(device)
+            u_embedding = u_embeddings[user_id, :]
+            attacker_trainers[feature].zero_grad()
+            loss = attackers[feature](u_embedding, label)
+            loss.backward()
+            attacker_trainers[feature].step()
+
+    feature_pred = {}
+    feature_true = {}
     for feature in args.FEATURES:
-        best_result[feature] = 0
-        best_epoch[feature] = 0
-    for epoch in range(args.EPOCH_ATTACKER):
-        for batch_data in tqdm(attacker_train, "Epoch %s" % epoch):
-            user_id, feature_label = batch_data
-            user_id = user_id.to(device)
-            for i, feature in enumerate(args.FEATURES):
-                label = feature_label[:, i].to(device)
-                u_embedding = u_embeddings[user_id, :]
-                attacker_trainers[feature].zero_grad()
-                loss = attackers[feature](u_embedding, label)
-                loss.backward()
-                attacker_trainers[feature].step()
-
-        feature_pred = {}
-        feature_true = {}
-        for feature in args.FEATURES:
-            feature_pred[feature] = []
-            feature_true[feature] = []
-            attackers[feature].eval()
-        for batch_data in tqdm(attacker_test, "Test"):
-            user_id, feature_label = batch_data
-            user_id = user_id.to(device)
-            for i, feature in enumerate(args.FEATURES):
-                u_embedding = u_embeddings[user_id, :]
-                pred = attackers[feature].predict(u_embedding).cpu()
-                feature_pred[feature].extend(pred.tolist())
-                feature_true[feature].extend(feature_label[:, i].tolist())
-        for feature in args.FEATURES:
-            print(feature)
-            print("auc:", roc_auc_score(feature_true[feature], feature_pred[feature]))
-        for feature in args.FEATURES:
-            attackers[feature].train()
-
-    print("-- Attacker final evaluation after training")
+        feature_pred[feature] = []
+        feature_true[feature] = []
+        attackers[feature].eval()
+    for batch_data in tqdm(attacker_test, "Test"):
+        user_id, feature_label = batch_data
+        user_id = user_id.to(device)
+        for i, feature in enumerate(args.FEATURES):
+            u_embedding = u_embeddings[user_id, :]
+            pred = attackers[feature].predict(u_embedding).cpu()
+            feature_pred[feature].extend(pred.tolist())
+            feature_true[feature].extend(feature_label[:, i].tolist())
+    attacker_metrics = {}
+    print(f"-- Attacker evaluation at epoch {epoch + 1}/{args.EPOCH_ATTACKER}")
     for feature in args.FEATURES:
         print(feature)
         print("auc:", roc_auc_score(feature_true[feature], feature_pred[feature]))
+        attacker_metrics[f"attacker/{feature}"] = roc_auc_score(feature_true[feature], feature_pred[feature])
+    wandb.log(attacker_metrics)
+    for feature in args.FEATURES:
+        attackers[feature].train()
 
-print("Finish")
+print("\n>> Attacker final evaluation after training")
+for feature in args.FEATURES:
+    print(feature)
+    print("auc:", roc_auc_score(feature_true[feature], feature_pred[feature]))
+
+print("\n>> Finish")
 end_time = time.time()
 print("Total duration: ", end_time - start_time)

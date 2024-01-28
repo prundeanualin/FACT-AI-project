@@ -51,8 +51,8 @@ data_model = ImplicitCF(train_df, validation_df, seed=seed)
 # self.model_dir = hparams.MODEL_DIR
 
 epochs = 1000
-save_epoch = 5
-eval_epoch = 2
+save_epoch = 50
+eval_epoch = 25
 learning_rate = 0.001
 embed_size = 64
 batch_size = 2048
