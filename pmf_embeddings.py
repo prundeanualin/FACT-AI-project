@@ -9,6 +9,9 @@ train_path = base_path + "train.csv"
 checkpoint_dir = 'pmf_models'
 latent_embedding_size = 32
 explicit = False  # Set to True for explicit feedback (1 to 5), False for implicit (0 or 1)
+threshold = 3  # Threshold model to load used
+epoch = 50  # Epoch to load the model on, pick the one with highest validation performance,
+# we pick 50 for threshold 3 implicit, 100 for threshold 1 implicit because they had the best valid performance
 
 feedback_type = 'explicit' if explicit else 'implicit'
 
@@ -18,7 +21,7 @@ n_users, n_movies = len(train['UserID'].unique()), len(train['MovieID'].unique()
 
 pmf_model = PMF(n_users, n_movies, latent_vectors=latent_embedding_size, lam_u=0.05, lam_v=0.05, explicit=explicit,
                 min_rating=min_rating, max_rating=max_rating)
-pmf_model.load_model(f'{checkpoint_dir}/pmf_model_{feedback_type}_emb_{latent_embedding_size}_epoch_100.pth')
+pmf_model.load_model(f'{checkpoint_dir}/pmf_model_{feedback_type}_emb_{latent_embedding_size}_thresh_{threshold}_epoch_{epoch}.pth')
 
 # Get user embeddings
 users = [_ for _ in range(1, 6041)]
@@ -57,8 +60,8 @@ print(user_emb_df.head())
 print(movie_emb_mapped.head())
 
 # Paths for saving CSV files
-user_emb_csv_path = base_path + 'pmf_user_embs.csv'
-movie_emb_csv_path = base_path + 'pmf_movie_embs.csv'
+user_emb_csv_path = base_path + f'pmf_user_embs_{latent_embedding_size}_thresh_{threshold}.csv'
+movie_emb_csv_path = base_path + f'pmf_movie_embs_{latent_embedding_size}_thresh_{threshold}.csv'
 
 # Save to CSV
 user_emb_df.to_csv(user_emb_csv_path, index=False)

@@ -1,0 +1,480 @@
+FairLISA
+Run Timestamp: 2024-01-29 20:25:58
+Namespace(DATA_BASE_PATH='data/ml-1m/', SENSITIVE_FEATURES=['Gender', 'Age', 'Occupation'], LAMBDA_1=1.0, LAMBDA_2=20.0, LAMBDA_3=10.0, CUDA=2, SEED=4869, BATCH_SIZE=8192, N_EPOCHS=10, EPOCHS_DISCRIMINATOR=10, EPOCHS_ATTACKER=50, FILTER_LAYER_SIZES=[16, 16], MODEL='NCF', LR=0.001, LR_DISC=0.01, DISCR_LATENT=16, USE_NOFEATURE=False, MISSING_RATIO=0.2, DEVICE='cuda', NCF_LAYERS=[32, 16, 8], EMB_DIM=16, NCF_MODEL_PATH='ncf_models_explicit/ncf_model_explicit_epoch_30.pth', PMF_MODEL_PATH='pmf_models/pmf_model_explicit_epoch_200.pth', USE_TEST_DATA=True, RESULTS_FILENAME='ml_explicit_missing_ratios_results.txt', SAVE_RES_TO_TXT='True')
+
+Final Epoch Evaluation Results User Model (Filtered) - Run Timestamp: 2024-01-29 20:25:58
+Mean Absolute Error: 0.8923
+Mean Squared Error: 1.3753
+Root Mean Squared Error: 1.1727
+
+Final Epoch Evaluation Results Attackers - Run Timestamp: 2024-01-29 20:25:58
+AUC for Gender: 0.5031
+AUC for Age: 0.5021
+AUC for Occupation: 0.5094
+
+------------------------------------------------
+
+ComFair
+Run Timestamp: 2024-01-29 20:33:27
+Namespace(DATA_BASE_PATH='data/ml-1m/', SENSITIVE_FEATURES=['Gender', 'Age', 'Occupation'], LAMBDA_1=1.0, LAMBDA_2=20.0, LAMBDA_3=0.0, CUDA=2, SEED=4869, BATCH_SIZE=8192, N_EPOCHS=10, EPOCHS_DISCRIMINATOR=10, EPOCHS_ATTACKER=50, FILTER_LAYER_SIZES=[16, 16], MODEL='NCF', LR=0.001, LR_DISC=0.01, DISCR_LATENT=16, USE_NOFEATURE=False, MISSING_RATIO=0.2, DEVICE='cuda', NCF_LAYERS=[32, 16, 8], EMB_DIM=16, NCF_MODEL_PATH='ncf_models_explicit/ncf_model_explicit_epoch_30.pth', PMF_MODEL_PATH='pmf_models/pmf_model_explicit_epoch_200.pth', USE_TEST_DATA=True, RESULTS_FILENAME='ml_explicit_missing_ratios_results.txt', SAVE_RES_TO_TXT='True')
+
+Final Epoch Evaluation Results User Model (Filtered) - Run Timestamp: 2024-01-29 20:33:27
+Mean Absolute Error: 0.8578
+Mean Squared Error: 1.3048
+Root Mean Squared Error: 1.1423
+
+Final Epoch Evaluation Results Attackers - Run Timestamp: 2024-01-29 20:33:27
+AUC for Gender: 0.4956
+AUC for Age: 0.5009
+AUC for Occupation: 0.4924
+
+------------------------------------------------
+
+Origin
+Run Timestamp: 2024-01-29 20:40:54
+Namespace(DATA_BASE_PATH='data/ml-1m/', SENSITIVE_FEATURES=['Gender', 'Age', 'Occupation'], LAMBDA_1=1.0, LAMBDA_2=0.0, LAMBDA_3=0.0, CUDA=2, SEED=4869, BATCH_SIZE=8192, N_EPOCHS=10, EPOCHS_DISCRIMINATOR=10, EPOCHS_ATTACKER=50, FILTER_LAYER_SIZES=[16, 16], MODEL='NCF', LR=0.001, LR_DISC=0.01, DISCR_LATENT=16, USE_NOFEATURE=False, MISSING_RATIO=0.2, DEVICE='cuda', NCF_LAYERS=[32, 16, 8], EMB_DIM=16, NCF_MODEL_PATH='ncf_models_explicit/ncf_model_explicit_epoch_30.pth', PMF_MODEL_PATH='pmf_models/pmf_model_explicit_epoch_200.pth', USE_TEST_DATA=True, RESULTS_FILENAME='ml_explicit_missing_ratios_results.txt', SAVE_RES_TO_TXT='True')
+
+Final Epoch Evaluation Results User Model (Filtered) - Run Timestamp: 2024-01-29 20:40:54
+Mean Absolute Error: 0.8520
+Mean Squared Error: 1.2857
+Root Mean Squared Error: 1.1339
+
+Final Epoch Evaluation Results Attackers - Run Timestamp: 2024-01-29 20:40:54
+AUC for Gender: 0.4859
+AUC for Age: 0.5049
+AUC for Occupation: 0.5160
+
+------------------------------------------------
+
+FairLISA
+Run Timestamp: 2024-01-29 20:49:01
+Namespace(DATA_BASE_PATH='data/ml-1m/', SENSITIVE_FEATURES=['Gender', 'Age', 'Occupation'], LAMBDA_1=1.0, LAMBDA_2=20.0, LAMBDA_3=10.0, CUDA=2, SEED=4869, BATCH_SIZE=8192, N_EPOCHS=10, EPOCHS_DISCRIMINATOR=10, EPOCHS_ATTACKER=50, FILTER_LAYER_SIZES=[16, 16], MODEL='NCF', LR=0.001, LR_DISC=0.01, DISCR_LATENT=16, USE_NOFEATURE=False, MISSING_RATIO=0.4, DEVICE='cuda', NCF_LAYERS=[32, 16, 8], EMB_DIM=16, NCF_MODEL_PATH='ncf_models_explicit/ncf_model_explicit_epoch_30.pth', PMF_MODEL_PATH='pmf_models/pmf_model_explicit_epoch_200.pth', USE_TEST_DATA=True, RESULTS_FILENAME='ml_explicit_missing_ratios_results.txt', SAVE_RES_TO_TXT='True')
+
+Final Epoch Evaluation Results User Model (Filtered) - Run Timestamp: 2024-01-29 20:49:01
+Mean Absolute Error: 0.7992
+Mean Squared Error: 1.1577
+Root Mean Squared Error: 1.0760
+
+Final Epoch Evaluation Results Attackers - Run Timestamp: 2024-01-29 20:49:01
+AUC for Gender: 0.5251
+AUC for Age: 0.5033
+AUC for Occupation: 0.4913
+
+------------------------------------------------
+
+ComFair
+Run Timestamp: 2024-01-29 20:56:11
+Namespace(DATA_BASE_PATH='data/ml-1m/', SENSITIVE_FEATURES=['Gender', 'Age', 'Occupation'], LAMBDA_1=1.0, LAMBDA_2=20.0, LAMBDA_3=0.0, CUDA=2, SEED=4869, BATCH_SIZE=8192, N_EPOCHS=10, EPOCHS_DISCRIMINATOR=10, EPOCHS_ATTACKER=50, FILTER_LAYER_SIZES=[16, 16], MODEL='NCF', LR=0.001, LR_DISC=0.01, DISCR_LATENT=16, USE_NOFEATURE=False, MISSING_RATIO=0.4, DEVICE='cuda', NCF_LAYERS=[32, 16, 8], EMB_DIM=16, NCF_MODEL_PATH='ncf_models_explicit/ncf_model_explicit_epoch_30.pth', PMF_MODEL_PATH='pmf_models/pmf_model_explicit_epoch_200.pth', USE_TEST_DATA=True, RESULTS_FILENAME='ml_explicit_missing_ratios_results.txt', SAVE_RES_TO_TXT='True')
+
+Final Epoch Evaluation Results User Model (Filtered) - Run Timestamp: 2024-01-29 20:56:11
+Mean Absolute Error: 0.8965
+Mean Squared Error: 1.3867
+Root Mean Squared Error: 1.1776
+
+Final Epoch Evaluation Results Attackers - Run Timestamp: 2024-01-29 20:56:11
+AUC for Gender: 0.5035
+AUC for Age: 0.4892
+AUC for Occupation: 0.5126
+
+------------------------------------------------
+
+Origin
+Run Timestamp: 2024-01-29 21:03:27
+Namespace(DATA_BASE_PATH='data/ml-1m/', SENSITIVE_FEATURES=['Gender', 'Age', 'Occupation'], LAMBDA_1=1.0, LAMBDA_2=0.0, LAMBDA_3=0.0, CUDA=2, SEED=4869, BATCH_SIZE=8192, N_EPOCHS=10, EPOCHS_DISCRIMINATOR=10, EPOCHS_ATTACKER=50, FILTER_LAYER_SIZES=[16, 16], MODEL='NCF', LR=0.001, LR_DISC=0.01, DISCR_LATENT=16, USE_NOFEATURE=False, MISSING_RATIO=0.4, DEVICE='cuda', NCF_LAYERS=[32, 16, 8], EMB_DIM=16, NCF_MODEL_PATH='ncf_models_explicit/ncf_model_explicit_epoch_30.pth', PMF_MODEL_PATH='pmf_models/pmf_model_explicit_epoch_200.pth', USE_TEST_DATA=True, RESULTS_FILENAME='ml_explicit_missing_ratios_results.txt', SAVE_RES_TO_TXT='True')
+
+Final Epoch Evaluation Results User Model (Filtered) - Run Timestamp: 2024-01-29 21:03:27
+Mean Absolute Error: 0.8520
+Mean Squared Error: 1.2857
+Root Mean Squared Error: 1.1339
+
+Final Epoch Evaluation Results Attackers - Run Timestamp: 2024-01-29 21:03:27
+AUC for Gender: 0.4859
+AUC for Age: 0.5049
+AUC for Occupation: 0.5160
+
+------------------------------------------------
+
+FairLISA
+Run Timestamp: 2024-01-29 21:10:13
+Namespace(DATA_BASE_PATH='data/ml-1m/', SENSITIVE_FEATURES=['Gender', 'Age', 'Occupation'], LAMBDA_1=1.0, LAMBDA_2=20.0, LAMBDA_3=10.0, CUDA=2, SEED=4869, BATCH_SIZE=8192, N_EPOCHS=10, EPOCHS_DISCRIMINATOR=10, EPOCHS_ATTACKER=50, FILTER_LAYER_SIZES=[16, 16], MODEL='NCF', LR=0.001, LR_DISC=0.01, DISCR_LATENT=16, USE_NOFEATURE=False, MISSING_RATIO=0.6, DEVICE='cuda', NCF_LAYERS=[32, 16, 8], EMB_DIM=16, NCF_MODEL_PATH='ncf_models_explicit/ncf_model_explicit_epoch_30.pth', PMF_MODEL_PATH='pmf_models/pmf_model_explicit_epoch_200.pth', USE_TEST_DATA=True, RESULTS_FILENAME='ml_explicit_missing_ratios_results.txt', SAVE_RES_TO_TXT='True')
+
+Final Epoch Evaluation Results User Model (Filtered) - Run Timestamp: 2024-01-29 21:10:13
+Mean Absolute Error: 0.8078
+Mean Squared Error: 1.1789
+Root Mean Squared Error: 1.0858
+
+Final Epoch Evaluation Results Attackers - Run Timestamp: 2024-01-29 21:10:13
+AUC for Gender: 0.4922
+AUC for Age: 0.5232
+AUC for Occupation: 0.4978
+
+------------------------------------------------
+
+ComFair
+Run Timestamp: 2024-01-29 21:15:39
+Namespace(DATA_BASE_PATH='data/ml-1m/', SENSITIVE_FEATURES=['Gender', 'Age', 'Occupation'], LAMBDA_1=1.0, LAMBDA_2=20.0, LAMBDA_3=0.0, CUDA=2, SEED=4869, BATCH_SIZE=8192, N_EPOCHS=10, EPOCHS_DISCRIMINATOR=10, EPOCHS_ATTACKER=50, FILTER_LAYER_SIZES=[16, 16], MODEL='NCF', LR=0.001, LR_DISC=0.01, DISCR_LATENT=16, USE_NOFEATURE=False, MISSING_RATIO=0.6, DEVICE='cuda', NCF_LAYERS=[32, 16, 8], EMB_DIM=16, NCF_MODEL_PATH='ncf_models_explicit/ncf_model_explicit_epoch_30.pth', PMF_MODEL_PATH='pmf_models/pmf_model_explicit_epoch_200.pth', USE_TEST_DATA=True, RESULTS_FILENAME='ml_explicit_missing_ratios_results.txt', SAVE_RES_TO_TXT='True')
+
+Final Epoch Evaluation Results User Model (Filtered) - Run Timestamp: 2024-01-29 21:15:39
+Mean Absolute Error: 0.8497
+Mean Squared Error: 1.2882
+Root Mean Squared Error: 1.1350
+
+Final Epoch Evaluation Results Attackers - Run Timestamp: 2024-01-29 21:15:39
+AUC for Gender: 0.4862
+AUC for Age: 0.5021
+AUC for Occupation: 0.4969
+
+------------------------------------------------
+
+Origin
+Run Timestamp: 2024-01-29 21:21:01
+Namespace(DATA_BASE_PATH='data/ml-1m/', SENSITIVE_FEATURES=['Gender', 'Age', 'Occupation'], LAMBDA_1=1.0, LAMBDA_2=0.0, LAMBDA_3=0.0, CUDA=2, SEED=4869, BATCH_SIZE=8192, N_EPOCHS=10, EPOCHS_DISCRIMINATOR=10, EPOCHS_ATTACKER=50, FILTER_LAYER_SIZES=[16, 16], MODEL='NCF', LR=0.001, LR_DISC=0.01, DISCR_LATENT=16, USE_NOFEATURE=False, MISSING_RATIO=0.6, DEVICE='cuda', NCF_LAYERS=[32, 16, 8], EMB_DIM=16, NCF_MODEL_PATH='ncf_models_explicit/ncf_model_explicit_epoch_30.pth', PMF_MODEL_PATH='pmf_models/pmf_model_explicit_epoch_200.pth', USE_TEST_DATA=True, RESULTS_FILENAME='ml_explicit_missing_ratios_results.txt', SAVE_RES_TO_TXT='True')
+
+Final Epoch Evaluation Results User Model (Filtered) - Run Timestamp: 2024-01-29 21:21:01
+Mean Absolute Error: 0.8520
+Mean Squared Error: 1.2857
+Root Mean Squared Error: 1.1339
+
+Final Epoch Evaluation Results Attackers - Run Timestamp: 2024-01-29 21:21:01
+AUC for Gender: 0.4859
+AUC for Age: 0.5049
+AUC for Occupation: 0.5160
+
+------------------------------------------------
+
+FairLISA
+Run Timestamp: 2024-01-29 21:26:14
+Namespace(DATA_BASE_PATH='data/ml-1m/', SENSITIVE_FEATURES=['Gender', 'Age', 'Occupation'], LAMBDA_1=1.0, LAMBDA_2=20.0, LAMBDA_3=10.0, CUDA=2, SEED=4869, BATCH_SIZE=8192, N_EPOCHS=10, EPOCHS_DISCRIMINATOR=10, EPOCHS_ATTACKER=50, FILTER_LAYER_SIZES=[16, 16], MODEL='NCF', LR=0.001, LR_DISC=0.01, DISCR_LATENT=16, USE_NOFEATURE=False, MISSING_RATIO=0.8, DEVICE='cuda', NCF_LAYERS=[32, 16, 8], EMB_DIM=16, NCF_MODEL_PATH='ncf_models_explicit/ncf_model_explicit_epoch_30.pth', PMF_MODEL_PATH='pmf_models/pmf_model_explicit_epoch_200.pth', USE_TEST_DATA=True, RESULTS_FILENAME='ml_explicit_missing_ratios_results.txt', SAVE_RES_TO_TXT='True')
+
+Final Epoch Evaluation Results User Model (Filtered) - Run Timestamp: 2024-01-29 21:26:14
+Mean Absolute Error: 0.8061
+Mean Squared Error: 1.1763
+Root Mean Squared Error: 1.0846
+
+Final Epoch Evaluation Results Attackers - Run Timestamp: 2024-01-29 21:26:14
+AUC for Gender: 0.5114
+AUC for Age: 0.5010
+AUC for Occupation: 0.4918
+
+------------------------------------------------
+
+ComFair
+Run Timestamp: 2024-01-29 21:30:29
+Namespace(DATA_BASE_PATH='data/ml-1m/', SENSITIVE_FEATURES=['Gender', 'Age', 'Occupation'], LAMBDA_1=1.0, LAMBDA_2=20.0, LAMBDA_3=0.0, CUDA=2, SEED=4869, BATCH_SIZE=8192, N_EPOCHS=10, EPOCHS_DISCRIMINATOR=10, EPOCHS_ATTACKER=50, FILTER_LAYER_SIZES=[16, 16], MODEL='NCF', LR=0.001, LR_DISC=0.01, DISCR_LATENT=16, USE_NOFEATURE=False, MISSING_RATIO=0.8, DEVICE='cuda', NCF_LAYERS=[32, 16, 8], EMB_DIM=16, NCF_MODEL_PATH='ncf_models_explicit/ncf_model_explicit_epoch_30.pth', PMF_MODEL_PATH='pmf_models/pmf_model_explicit_epoch_200.pth', USE_TEST_DATA=True, RESULTS_FILENAME='ml_explicit_missing_ratios_results.txt', SAVE_RES_TO_TXT='True')
+
+Final Epoch Evaluation Results User Model (Filtered) - Run Timestamp: 2024-01-29 21:30:29
+Mean Absolute Error: 0.8446
+Mean Squared Error: 1.2667
+Root Mean Squared Error: 1.1255
+
+Final Epoch Evaluation Results Attackers - Run Timestamp: 2024-01-29 21:30:29
+AUC for Gender: 0.4617
+AUC for Age: 0.5028
+AUC for Occupation: 0.5039
+
+------------------------------------------------
+
+Origin
+Run Timestamp: 2024-01-29 21:34:50
+Namespace(DATA_BASE_PATH='data/ml-1m/', SENSITIVE_FEATURES=['Gender', 'Age', 'Occupation'], LAMBDA_1=1.0, LAMBDA_2=0.0, LAMBDA_3=0.0, CUDA=2, SEED=4869, BATCH_SIZE=8192, N_EPOCHS=10, EPOCHS_DISCRIMINATOR=10, EPOCHS_ATTACKER=50, FILTER_LAYER_SIZES=[16, 16], MODEL='NCF', LR=0.001, LR_DISC=0.01, DISCR_LATENT=16, USE_NOFEATURE=False, MISSING_RATIO=0.8, DEVICE='cuda', NCF_LAYERS=[32, 16, 8], EMB_DIM=16, NCF_MODEL_PATH='ncf_models_explicit/ncf_model_explicit_epoch_30.pth', PMF_MODEL_PATH='pmf_models/pmf_model_explicit_epoch_200.pth', USE_TEST_DATA=True, RESULTS_FILENAME='ml_explicit_missing_ratios_results.txt', SAVE_RES_TO_TXT='True')
+
+Final Epoch Evaluation Results User Model (Filtered) - Run Timestamp: 2024-01-29 21:34:50
+Mean Absolute Error: 0.8520
+Mean Squared Error: 1.2857
+Root Mean Squared Error: 1.1339
+
+Final Epoch Evaluation Results Attackers - Run Timestamp: 2024-01-29 21:34:50
+AUC for Gender: 0.4859
+AUC for Age: 0.5049
+AUC for Occupation: 0.5160
+
+------------------------------------------------
+
+FairLISA
+Run Timestamp: 2024-01-29 21:39:02
+Namespace(DATA_BASE_PATH='data/ml-1m/', SENSITIVE_FEATURES=['Gender', 'Age', 'Occupation'], LAMBDA_1=1.0, LAMBDA_2=20.0, LAMBDA_3=10.0, CUDA=2, SEED=4869, BATCH_SIZE=8192, N_EPOCHS=10, EPOCHS_DISCRIMINATOR=10, EPOCHS_ATTACKER=50, FILTER_LAYER_SIZES=[16, 16], MODEL='NCF', LR=0.001, LR_DISC=0.01, DISCR_LATENT=16, USE_NOFEATURE=False, MISSING_RATIO=0.95, DEVICE='cuda', NCF_LAYERS=[32, 16, 8], EMB_DIM=16, NCF_MODEL_PATH='ncf_models_explicit/ncf_model_explicit_epoch_30.pth', PMF_MODEL_PATH='pmf_models/pmf_model_explicit_epoch_200.pth', USE_TEST_DATA=True, RESULTS_FILENAME='ml_explicit_missing_ratios_results.txt', SAVE_RES_TO_TXT='True')
+
+Final Epoch Evaluation Results User Model (Filtered) - Run Timestamp: 2024-01-29 21:39:02
+Mean Absolute Error: 1.4135
+Mean Squared Error: 2.7801
+Root Mean Squared Error: 1.6674
+
+Final Epoch Evaluation Results Attackers - Run Timestamp: 2024-01-29 21:39:02
+AUC for Gender: 0.5245
+AUC for Age: 0.4940
+AUC for Occupation: 0.4963
+
+------------------------------------------------
+
+ComFair
+Run Timestamp: 2024-01-29 21:42:39
+Namespace(DATA_BASE_PATH='data/ml-1m/', SENSITIVE_FEATURES=['Gender', 'Age', 'Occupation'], LAMBDA_1=1.0, LAMBDA_2=20.0, LAMBDA_3=0.0, CUDA=2, SEED=4869, BATCH_SIZE=8192, N_EPOCHS=10, EPOCHS_DISCRIMINATOR=10, EPOCHS_ATTACKER=50, FILTER_LAYER_SIZES=[16, 16], MODEL='NCF', LR=0.001, LR_DISC=0.01, DISCR_LATENT=16, USE_NOFEATURE=False, MISSING_RATIO=0.95, DEVICE='cuda', NCF_LAYERS=[32, 16, 8], EMB_DIM=16, NCF_MODEL_PATH='ncf_models_explicit/ncf_model_explicit_epoch_30.pth', PMF_MODEL_PATH='pmf_models/pmf_model_explicit_epoch_200.pth', USE_TEST_DATA=True, RESULTS_FILENAME='ml_explicit_missing_ratios_results.txt', SAVE_RES_TO_TXT='True')
+
+Final Epoch Evaluation Results User Model (Filtered) - Run Timestamp: 2024-01-29 21:42:39
+Mean Absolute Error: 0.8579
+Mean Squared Error: 1.2978
+Root Mean Squared Error: 1.1392
+
+Final Epoch Evaluation Results Attackers - Run Timestamp: 2024-01-29 21:42:39
+AUC for Gender: 0.4874
+AUC for Age: 0.5116
+AUC for Occupation: 0.5065
+
+------------------------------------------------
+
+Origin
+Run Timestamp: 2024-01-29 21:46:15
+Namespace(DATA_BASE_PATH='data/ml-1m/', SENSITIVE_FEATURES=['Gender', 'Age', 'Occupation'], LAMBDA_1=1.0, LAMBDA_2=0.0, LAMBDA_3=0.0, CUDA=2, SEED=4869, BATCH_SIZE=8192, N_EPOCHS=10, EPOCHS_DISCRIMINATOR=10, EPOCHS_ATTACKER=50, FILTER_LAYER_SIZES=[16, 16], MODEL='NCF', LR=0.001, LR_DISC=0.01, DISCR_LATENT=16, USE_NOFEATURE=False, MISSING_RATIO=0.95, DEVICE='cuda', NCF_LAYERS=[32, 16, 8], EMB_DIM=16, NCF_MODEL_PATH='ncf_models_explicit/ncf_model_explicit_epoch_30.pth', PMF_MODEL_PATH='pmf_models/pmf_model_explicit_epoch_200.pth', USE_TEST_DATA=True, RESULTS_FILENAME='ml_explicit_missing_ratios_results.txt', SAVE_RES_TO_TXT='True')
+
+Final Epoch Evaluation Results User Model (Filtered) - Run Timestamp: 2024-01-29 21:46:15
+Mean Absolute Error: 0.8520
+Mean Squared Error: 1.2857
+Root Mean Squared Error: 1.1339
+
+Final Epoch Evaluation Results Attackers - Run Timestamp: 2024-01-29 21:46:15
+AUC for Gender: 0.4859
+AUC for Age: 0.5049
+AUC for Occupation: 0.5160
+
+------------------------------------------------
+
+FairLISA
+Run Timestamp: 2024-01-30 18:07:04
+Namespace(DATA_BASE_PATH='data/ml-1m/', SENSITIVE_FEATURES=['Gender', 'Age', 'Occupation'], LAMBDA_1=1.0, LAMBDA_2=20.0, LAMBDA_3=10.0, CUDA=2, SEED=4869, BATCH_SIZE=8192, N_EPOCHS=10, EPOCHS_DISCRIMINATOR=10, EPOCHS_ATTACKER=50, FILTER_LAYER_SIZES=[16, 16], MODEL='PMF', LR=0.001, LR_DISC=0.01, DISCR_LATENT=16, USE_NOFEATURE=False, MISSING_RATIO=0.2, DEVICE='cuda', NCF_LAYERS=[32, 16, 8], EMB_DIM=16, NCF_MODEL_PATH='ncf_models_explicit/ncf_model_explicit_epoch_30.pth', PMF_MODEL_PATH='pmf_models/pmf_model_explicit_emb_16_epoch_80.pth', USE_TEST_DATA=True, RESULTS_FILENAME='ml_explicit_missing_ratios_results.txt', SAVE_RES_TO_TXT='True', ORIGIN=False)
+
+Final Epoch Evaluation Results User Model (Filtered) - Run Timestamp: 2024-01-30 18:07:04
+Mean Absolute Error: 1.0709
+Mean Squared Error: 1.7611
+Root Mean Squared Error: 1.3271
+
+Final Epoch Evaluation Results Attackers - Run Timestamp: 2024-01-30 18:07:04
+AUC for Gender: 0.5116
+AUC for Age: 0.5204
+AUC for Occupation: 0.5242
+
+------------------------------------------------
+
+ComFair
+Run Timestamp: 2024-01-30 18:18:05
+Namespace(DATA_BASE_PATH='data/ml-1m/', SENSITIVE_FEATURES=['Gender', 'Age', 'Occupation'], LAMBDA_1=1.0, LAMBDA_2=20.0, LAMBDA_3=0.0, CUDA=2, SEED=4869, BATCH_SIZE=8192, N_EPOCHS=10, EPOCHS_DISCRIMINATOR=10, EPOCHS_ATTACKER=50, FILTER_LAYER_SIZES=[16, 16], MODEL='PMF', LR=0.001, LR_DISC=0.01, DISCR_LATENT=16, USE_NOFEATURE=False, MISSING_RATIO=0.2, DEVICE='cuda', NCF_LAYERS=[32, 16, 8], EMB_DIM=16, NCF_MODEL_PATH='ncf_models_explicit/ncf_model_explicit_epoch_30.pth', PMF_MODEL_PATH='pmf_models/pmf_model_explicit_emb_16_epoch_80.pth', USE_TEST_DATA=True, RESULTS_FILENAME='ml_explicit_missing_ratios_results.txt', SAVE_RES_TO_TXT='True', ORIGIN=False)
+
+Final Epoch Evaluation Results User Model (Filtered) - Run Timestamp: 2024-01-30 18:18:05
+Mean Absolute Error: 1.0030
+Mean Squared Error: 1.5686
+Root Mean Squared Error: 1.2524
+
+Final Epoch Evaluation Results Attackers - Run Timestamp: 2024-01-30 18:18:05
+AUC for Gender: 0.4968
+AUC for Age: 0.5025
+AUC for Occupation: 0.5001
+
+------------------------------------------------
+
+Origin
+Run Timestamp: 2024-01-30 18:28:56
+Namespace(DATA_BASE_PATH='data/ml-1m/', SENSITIVE_FEATURES=['Gender', 'Age', 'Occupation'], LAMBDA_1=1.0, LAMBDA_2=20.0, LAMBDA_3=10.0, CUDA=2, SEED=4869, BATCH_SIZE=8192, N_EPOCHS=10, EPOCHS_DISCRIMINATOR=10, EPOCHS_ATTACKER=50, FILTER_LAYER_SIZES=[16, 16], MODEL='PMF', LR=0.001, LR_DISC=0.01, DISCR_LATENT=16, USE_NOFEATURE=False, MISSING_RATIO=0.2, DEVICE='cuda', NCF_LAYERS=[32, 16, 8], EMB_DIM=16, NCF_MODEL_PATH='ncf_models_explicit/ncf_model_explicit_emb_16_epoch_30.pth', PMF_MODEL_PATH='pmf_models/pmf_model_explicit_emb_16_epoch_80.pth', USE_TEST_DATA=True, RESULTS_FILENAME='ml_explicit_missing_ratios_results.txt', SAVE_RES_TO_TXT='True', ORIGIN=True)
+
+Final Epoch Evaluation Results User Model (Filtered) - Run Timestamp: 2024-01-30 18:28:56
+Mean Absolute Error: 0.6753
+Mean Squared Error: 0.9163
+Root Mean Squared Error: 0.9572
+
+Final Epoch Evaluation Results Attackers - Run Timestamp: 2024-01-30 18:28:56
+AUC for Gender: 0.5613
+AUC for Age: 0.5425
+AUC for Occupation: 0.5244
+
+------------------------------------------------
+
+FairLISA
+Run Timestamp: 2024-01-30 18:29:43
+Namespace(DATA_BASE_PATH='data/ml-1m/', SENSITIVE_FEATURES=['Gender', 'Age', 'Occupation'], LAMBDA_1=1.0, LAMBDA_2=20.0, LAMBDA_3=10.0, CUDA=2, SEED=4869, BATCH_SIZE=8192, N_EPOCHS=10, EPOCHS_DISCRIMINATOR=10, EPOCHS_ATTACKER=50, FILTER_LAYER_SIZES=[16, 16], MODEL='PMF', LR=0.001, LR_DISC=0.01, DISCR_LATENT=16, USE_NOFEATURE=False, MISSING_RATIO=0.4, DEVICE='cuda', NCF_LAYERS=[32, 16, 8], EMB_DIM=16, NCF_MODEL_PATH='ncf_models_explicit/ncf_model_explicit_emb_16_epoch_30.pth', PMF_MODEL_PATH='pmf_models/pmf_model_explicit_emb_16_epoch_80.pth', USE_TEST_DATA=True, RESULTS_FILENAME='ml_explicit_missing_ratios_results.txt', SAVE_RES_TO_TXT='True', ORIGIN=False)
+
+Final Epoch Evaluation Results User Model (Filtered) - Run Timestamp: 2024-01-30 18:29:43
+Mean Absolute Error: 0.9742
+Mean Squared Error: 1.4818
+Root Mean Squared Error: 1.2173
+
+Final Epoch Evaluation Results Attackers - Run Timestamp: 2024-01-30 18:29:43
+AUC for Gender: 0.5175
+AUC for Age: 0.5016
+AUC for Occupation: 0.5174
+
+------------------------------------------------
+
+ComFair
+Run Timestamp: 2024-01-30 18:37:36
+Namespace(DATA_BASE_PATH='data/ml-1m/', SENSITIVE_FEATURES=['Gender', 'Age', 'Occupation'], LAMBDA_1=1.0, LAMBDA_2=20.0, LAMBDA_3=0.0, CUDA=2, SEED=4869, BATCH_SIZE=8192, N_EPOCHS=10, EPOCHS_DISCRIMINATOR=10, EPOCHS_ATTACKER=50, FILTER_LAYER_SIZES=[16, 16], MODEL='PMF', LR=0.001, LR_DISC=0.01, DISCR_LATENT=16, USE_NOFEATURE=False, MISSING_RATIO=0.4, DEVICE='cuda', NCF_LAYERS=[32, 16, 8], EMB_DIM=16, NCF_MODEL_PATH='ncf_models_explicit/ncf_model_explicit_emb_16_epoch_30.pth', PMF_MODEL_PATH='pmf_models/pmf_model_explicit_emb_16_epoch_80.pth', USE_TEST_DATA=True, RESULTS_FILENAME='ml_explicit_missing_ratios_results.txt', SAVE_RES_TO_TXT='True', ORIGIN=False)
+
+Final Epoch Evaluation Results User Model (Filtered) - Run Timestamp: 2024-01-30 18:37:36
+Mean Absolute Error: 0.9830
+Mean Squared Error: 1.5055
+Root Mean Squared Error: 1.2270
+
+Final Epoch Evaluation Results Attackers - Run Timestamp: 2024-01-30 18:37:36
+AUC for Gender: 0.5034
+AUC for Age: 0.5186
+AUC for Occupation: 0.5071
+
+------------------------------------------------
+
+Origin
+Run Timestamp: 2024-01-30 18:44:07
+Namespace(DATA_BASE_PATH='data/ml-1m/', SENSITIVE_FEATURES=['Gender', 'Age', 'Occupation'], LAMBDA_1=1.0, LAMBDA_2=20.0, LAMBDA_3=10.0, CUDA=2, SEED=4869, BATCH_SIZE=8192, N_EPOCHS=10, EPOCHS_DISCRIMINATOR=10, EPOCHS_ATTACKER=50, FILTER_LAYER_SIZES=[16, 16], MODEL='PMF', LR=0.001, LR_DISC=0.01, DISCR_LATENT=16, USE_NOFEATURE=False, MISSING_RATIO=0.4, DEVICE='cuda', NCF_LAYERS=[32, 16, 8], EMB_DIM=16, NCF_MODEL_PATH='ncf_models_explicit/ncf_model_explicit_emb_16_epoch_30.pth', PMF_MODEL_PATH='pmf_models/pmf_model_explicit_emb_16_epoch_80.pth', USE_TEST_DATA=True, RESULTS_FILENAME='ml_explicit_missing_ratios_results.txt', SAVE_RES_TO_TXT='True', ORIGIN=True)
+
+Final Epoch Evaluation Results User Model (Filtered) - Run Timestamp: 2024-01-30 18:44:07
+Mean Absolute Error: 0.6753
+Mean Squared Error: 0.9163
+Root Mean Squared Error: 0.9572
+
+Final Epoch Evaluation Results Attackers - Run Timestamp: 2024-01-30 18:44:07
+AUC for Gender: 0.5613
+AUC for Age: 0.5425
+AUC for Occupation: 0.5244
+
+------------------------------------------------
+
+FairLISA
+Run Timestamp: 2024-01-30 18:44:33
+Namespace(DATA_BASE_PATH='data/ml-1m/', SENSITIVE_FEATURES=['Gender', 'Age', 'Occupation'], LAMBDA_1=1.0, LAMBDA_2=20.0, LAMBDA_3=10.0, CUDA=2, SEED=4869, BATCH_SIZE=8192, N_EPOCHS=10, EPOCHS_DISCRIMINATOR=10, EPOCHS_ATTACKER=50, FILTER_LAYER_SIZES=[16, 16], MODEL='PMF', LR=0.001, LR_DISC=0.01, DISCR_LATENT=16, USE_NOFEATURE=False, MISSING_RATIO=0.6, DEVICE='cuda', NCF_LAYERS=[32, 16, 8], EMB_DIM=16, NCF_MODEL_PATH='ncf_models_explicit/ncf_model_explicit_emb_16_epoch_30.pth', PMF_MODEL_PATH='pmf_models/pmf_model_explicit_emb_16_epoch_80.pth', USE_TEST_DATA=True, RESULTS_FILENAME='ml_explicit_missing_ratios_results.txt', SAVE_RES_TO_TXT='True', ORIGIN=False)
+
+Final Epoch Evaluation Results User Model (Filtered) - Run Timestamp: 2024-01-30 18:44:33
+Mean Absolute Error: 0.9824
+Mean Squared Error: 1.5064
+Root Mean Squared Error: 1.2273
+
+Final Epoch Evaluation Results Attackers - Run Timestamp: 2024-01-30 18:44:33
+AUC for Gender: 0.5319
+AUC for Age: 0.5134
+AUC for Occupation: 0.5234
+
+------------------------------------------------
+
+ComFair
+Run Timestamp: 2024-01-30 18:50:04
+Namespace(DATA_BASE_PATH='data/ml-1m/', SENSITIVE_FEATURES=['Gender', 'Age', 'Occupation'], LAMBDA_1=1.0, LAMBDA_2=20.0, LAMBDA_3=0.0, CUDA=2, SEED=4869, BATCH_SIZE=8192, N_EPOCHS=10, EPOCHS_DISCRIMINATOR=10, EPOCHS_ATTACKER=50, FILTER_LAYER_SIZES=[16, 16], MODEL='PMF', LR=0.001, LR_DISC=0.01, DISCR_LATENT=16, USE_NOFEATURE=False, MISSING_RATIO=0.6, DEVICE='cuda', NCF_LAYERS=[32, 16, 8], EMB_DIM=16, NCF_MODEL_PATH='ncf_models_explicit/ncf_model_explicit_emb_16_epoch_30.pth', PMF_MODEL_PATH='pmf_models/pmf_model_explicit_emb_16_epoch_80.pth', USE_TEST_DATA=True, RESULTS_FILENAME='ml_explicit_missing_ratios_results.txt', SAVE_RES_TO_TXT='True', ORIGIN=False)
+
+Final Epoch Evaluation Results User Model (Filtered) - Run Timestamp: 2024-01-30 18:50:04
+Mean Absolute Error: 0.9915
+Mean Squared Error: 1.5316
+Root Mean Squared Error: 1.2376
+
+Final Epoch Evaluation Results Attackers - Run Timestamp: 2024-01-30 18:50:04
+AUC for Gender: 0.5462
+AUC for Age: 0.5222
+AUC for Occupation: 0.5054
+
+------------------------------------------------
+
+Origin
+Run Timestamp: 2024-01-30 18:55:34
+Namespace(DATA_BASE_PATH='data/ml-1m/', SENSITIVE_FEATURES=['Gender', 'Age', 'Occupation'], LAMBDA_1=1.0, LAMBDA_2=20.0, LAMBDA_3=10.0, CUDA=2, SEED=4869, BATCH_SIZE=8192, N_EPOCHS=10, EPOCHS_DISCRIMINATOR=10, EPOCHS_ATTACKER=50, FILTER_LAYER_SIZES=[16, 16], MODEL='PMF', LR=0.001, LR_DISC=0.01, DISCR_LATENT=16, USE_NOFEATURE=False, MISSING_RATIO=0.6, DEVICE='cuda', NCF_LAYERS=[32, 16, 8], EMB_DIM=16, NCF_MODEL_PATH='ncf_models_explicit/ncf_model_explicit_emb_16_epoch_30.pth', PMF_MODEL_PATH='pmf_models/pmf_model_explicit_emb_16_epoch_80.pth', USE_TEST_DATA=True, RESULTS_FILENAME='ml_explicit_missing_ratios_results.txt', SAVE_RES_TO_TXT='True', ORIGIN=True)
+
+Final Epoch Evaluation Results User Model (Filtered) - Run Timestamp: 2024-01-30 18:55:34
+Mean Absolute Error: 0.6753
+Mean Squared Error: 0.9163
+Root Mean Squared Error: 0.9572
+
+Final Epoch Evaluation Results Attackers - Run Timestamp: 2024-01-30 18:55:34
+AUC for Gender: 0.5613
+AUC for Age: 0.5425
+AUC for Occupation: 0.5244
+
+------------------------------------------------
+
+FairLISA
+Run Timestamp: 2024-01-30 18:55:59
+Namespace(DATA_BASE_PATH='data/ml-1m/', SENSITIVE_FEATURES=['Gender', 'Age', 'Occupation'], LAMBDA_1=1.0, LAMBDA_2=20.0, LAMBDA_3=10.0, CUDA=2, SEED=4869, BATCH_SIZE=8192, N_EPOCHS=10, EPOCHS_DISCRIMINATOR=10, EPOCHS_ATTACKER=50, FILTER_LAYER_SIZES=[16, 16], MODEL='PMF', LR=0.001, LR_DISC=0.01, DISCR_LATENT=16, USE_NOFEATURE=False, MISSING_RATIO=0.8, DEVICE='cuda', NCF_LAYERS=[32, 16, 8], EMB_DIM=16, NCF_MODEL_PATH='ncf_models_explicit/ncf_model_explicit_emb_16_epoch_30.pth', PMF_MODEL_PATH='pmf_models/pmf_model_explicit_emb_16_epoch_80.pth', USE_TEST_DATA=True, RESULTS_FILENAME='ml_explicit_missing_ratios_results.txt', SAVE_RES_TO_TXT='True', ORIGIN=False)
+
+Final Epoch Evaluation Results User Model (Filtered) - Run Timestamp: 2024-01-30 18:55:59
+Mean Absolute Error: 1.0449
+Mean Squared Error: 1.6876
+Root Mean Squared Error: 1.2991
+
+Final Epoch Evaluation Results Attackers - Run Timestamp: 2024-01-30 18:55:59
+AUC for Gender: 0.5212
+AUC for Age: 0.4930
+AUC for Occupation: 0.5225
+
+------------------------------------------------
+
+ComFair
+Run Timestamp: 2024-01-30 19:01:00
+Namespace(DATA_BASE_PATH='data/ml-1m/', SENSITIVE_FEATURES=['Gender', 'Age', 'Occupation'], LAMBDA_1=1.0, LAMBDA_2=20.0, LAMBDA_3=0.0, CUDA=2, SEED=4869, BATCH_SIZE=8192, N_EPOCHS=10, EPOCHS_DISCRIMINATOR=10, EPOCHS_ATTACKER=50, FILTER_LAYER_SIZES=[16, 16], MODEL='PMF', LR=0.001, LR_DISC=0.01, DISCR_LATENT=16, USE_NOFEATURE=False, MISSING_RATIO=0.8, DEVICE='cuda', NCF_LAYERS=[32, 16, 8], EMB_DIM=16, NCF_MODEL_PATH='ncf_models_explicit/ncf_model_explicit_emb_16_epoch_30.pth', PMF_MODEL_PATH='pmf_models/pmf_model_explicit_emb_16_epoch_80.pth', USE_TEST_DATA=True, RESULTS_FILENAME='ml_explicit_missing_ratios_results.txt', SAVE_RES_TO_TXT='True', ORIGIN=False)
+
+Final Epoch Evaluation Results User Model (Filtered) - Run Timestamp: 2024-01-30 19:01:00
+Mean Absolute Error: 0.9765
+Mean Squared Error: 1.4895
+Root Mean Squared Error: 1.2205
+
+Final Epoch Evaluation Results Attackers - Run Timestamp: 2024-01-30 19:01:00
+AUC for Gender: 0.5346
+AUC for Age: 0.5274
+AUC for Occupation: 0.4989
+
+------------------------------------------------
+
+Origin
+Run Timestamp: 2024-01-30 19:05:32
+Namespace(DATA_BASE_PATH='data/ml-1m/', SENSITIVE_FEATURES=['Gender', 'Age', 'Occupation'], LAMBDA_1=1.0, LAMBDA_2=20.0, LAMBDA_3=10.0, CUDA=2, SEED=4869, BATCH_SIZE=8192, N_EPOCHS=10, EPOCHS_DISCRIMINATOR=10, EPOCHS_ATTACKER=50, FILTER_LAYER_SIZES=[16, 16], MODEL='PMF', LR=0.001, LR_DISC=0.01, DISCR_LATENT=16, USE_NOFEATURE=False, MISSING_RATIO=0.8, DEVICE='cuda', NCF_LAYERS=[32, 16, 8], EMB_DIM=16, NCF_MODEL_PATH='ncf_models_explicit/ncf_model_explicit_emb_16_epoch_30.pth', PMF_MODEL_PATH='pmf_models/pmf_model_explicit_emb_16_epoch_80.pth', USE_TEST_DATA=True, RESULTS_FILENAME='ml_explicit_missing_ratios_results.txt', SAVE_RES_TO_TXT='True', ORIGIN=True)
+
+Final Epoch Evaluation Results User Model (Filtered) - Run Timestamp: 2024-01-30 19:05:32
+Mean Absolute Error: 0.6753
+Mean Squared Error: 0.9163
+Root Mean Squared Error: 0.9572
+
+Final Epoch Evaluation Results Attackers - Run Timestamp: 2024-01-30 19:05:32
+AUC for Gender: 0.5613
+AUC for Age: 0.5425
+AUC for Occupation: 0.5244
+
+------------------------------------------------
+
+FairLISA
+Run Timestamp: 2024-01-30 19:05:56
+Namespace(DATA_BASE_PATH='data/ml-1m/', SENSITIVE_FEATURES=['Gender', 'Age', 'Occupation'], LAMBDA_1=1.0, LAMBDA_2=20.0, LAMBDA_3=10.0, CUDA=2, SEED=4869, BATCH_SIZE=8192, N_EPOCHS=10, EPOCHS_DISCRIMINATOR=10, EPOCHS_ATTACKER=50, FILTER_LAYER_SIZES=[16, 16], MODEL='PMF', LR=0.001, LR_DISC=0.01, DISCR_LATENT=16, USE_NOFEATURE=False, MISSING_RATIO=0.95, DEVICE='cuda', NCF_LAYERS=[32, 16, 8], EMB_DIM=16, NCF_MODEL_PATH='ncf_models_explicit/ncf_model_explicit_emb_16_epoch_30.pth', PMF_MODEL_PATH='pmf_models/pmf_model_explicit_emb_16_epoch_80.pth', USE_TEST_DATA=True, RESULTS_FILENAME='ml_explicit_missing_ratios_results.txt', SAVE_RES_TO_TXT='True', ORIGIN=False)
+
+Final Epoch Evaluation Results User Model (Filtered) - Run Timestamp: 2024-01-30 19:05:56
+Mean Absolute Error: 1.6078
+Mean Squared Error: 3.8174
+Root Mean Squared Error: 1.9538
+
+Final Epoch Evaluation Results Attackers - Run Timestamp: 2024-01-30 19:05:56
+AUC for Gender: 0.5086
+AUC for Age: 0.5073
+AUC for Occupation: 0.5025
+
+------------------------------------------------
+
+ComFair
+Run Timestamp: 2024-01-30 19:09:45
+Namespace(DATA_BASE_PATH='data/ml-1m/', SENSITIVE_FEATURES=['Gender', 'Age', 'Occupation'], LAMBDA_1=1.0, LAMBDA_2=20.0, LAMBDA_3=0.0, CUDA=2, SEED=4869, BATCH_SIZE=8192, N_EPOCHS=10, EPOCHS_DISCRIMINATOR=10, EPOCHS_ATTACKER=50, FILTER_LAYER_SIZES=[16, 16], MODEL='PMF', LR=0.001, LR_DISC=0.01, DISCR_LATENT=16, USE_NOFEATURE=False, MISSING_RATIO=0.95, DEVICE='cuda', NCF_LAYERS=[32, 16, 8], EMB_DIM=16, NCF_MODEL_PATH='ncf_models_explicit/ncf_model_explicit_emb_16_epoch_30.pth', PMF_MODEL_PATH='pmf_models/pmf_model_explicit_emb_16_epoch_80.pth', USE_TEST_DATA=True, RESULTS_FILENAME='ml_explicit_missing_ratios_results.txt', SAVE_RES_TO_TXT='True', ORIGIN=False)
+
+Final Epoch Evaluation Results User Model (Filtered) - Run Timestamp: 2024-01-30 19:09:45
+Mean Absolute Error: 0.9778
+Mean Squared Error: 1.4915
+Root Mean Squared Error: 1.2213
+
+Final Epoch Evaluation Results Attackers - Run Timestamp: 2024-01-30 19:09:45
+AUC for Gender: 0.5184
+AUC for Age: 0.4952
+AUC for Occupation: 0.5016
+
+------------------------------------------------
+
+Origin
+Run Timestamp: 2024-01-30 19:13:34
+Namespace(DATA_BASE_PATH='data/ml-1m/', SENSITIVE_FEATURES=['Gender', 'Age', 'Occupation'], LAMBDA_1=1.0, LAMBDA_2=20.0, LAMBDA_3=10.0, CUDA=2, SEED=4869, BATCH_SIZE=8192, N_EPOCHS=10, EPOCHS_DISCRIMINATOR=10, EPOCHS_ATTACKER=50, FILTER_LAYER_SIZES=[16, 16], MODEL='PMF', LR=0.001, LR_DISC=0.01, DISCR_LATENT=16, USE_NOFEATURE=False, MISSING_RATIO=0.95, DEVICE='cuda', NCF_LAYERS=[32, 16, 8], EMB_DIM=16, NCF_MODEL_PATH='ncf_models_explicit/ncf_model_explicit_emb_16_epoch_30.pth', PMF_MODEL_PATH='pmf_models/pmf_model_explicit_emb_16_epoch_80.pth', USE_TEST_DATA=True, RESULTS_FILENAME='ml_explicit_missing_ratios_results.txt', SAVE_RES_TO_TXT='True', ORIGIN=True)
+
+Final Epoch Evaluation Results User Model (Filtered) - Run Timestamp: 2024-01-30 19:13:34
+Mean Absolute Error: 0.6753
+Mean Squared Error: 0.9163
+Root Mean Squared Error: 0.9572
+
+Final Epoch Evaluation Results Attackers - Run Timestamp: 2024-01-30 19:13:34
+AUC for Gender: 0.5613
+AUC for Age: 0.5425
+AUC for Occupation: 0.5244
+
+------------------------------------------------
+

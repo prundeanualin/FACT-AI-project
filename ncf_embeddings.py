@@ -1,23 +1,26 @@
 import numpy as np
 import pandas as pd
-from ncf import get_movie_embeddings, get_user_embeddings, load_ncf_model
+from utils_ml import load_ncf_model, ncf_get_movie_embeddings, ncf_get_user_embeddings
 
 
 base_path = "data/ml-1m/"
-model_dir = "ncf_models"
+model_dir = "ncf_models/"
+epoch = 20
+threshold = 3
+model_path = f"{model_dir}thresh_{threshold}_epoch_{epoch}"
 
-model = load_ncf_model(model_dir, base_path)
+model = load_ncf_model(model_path, base_path)
 
 # Load the validation set
 train = pd.read_csv(base_path + "train.csv")
 
 # Get user embeddings
 users = [_ for _ in range(1, 6041)]
-user_emb = get_user_embeddings(model, users)
+user_emb = ncf_get_user_embeddings(model, users)
 
 # Get movie embeddings
 unique_movies = train['MovieID'].unique()
-movie_emb = get_movie_embeddings(model, unique_movies)
+movie_emb = ncf_get_movie_embeddings(model, unique_movies)
 
 # Convert user_emb to a DataFrame
 user_emb_df = pd.DataFrame(user_emb, columns=[f'user_emb_{i}' for i in range(user_emb.shape[1])])
@@ -46,8 +49,8 @@ print(user_emb_df.head())
 print(movie_emb_mapped.head())
 
 # Paths for saving CSV files
-user_emb_csv_path = base_path + 'ncf_user_embs.csv'
-movie_emb_csv_path = base_path + 'ncf_movie_embs.csv'
+user_emb_csv_path = f'{base_path}ncf_user_embs_32_thresh_{threshold}.csv'
+movie_emb_csv_path = f'{base_path}ncf_movie_embs_32_thresh_{threshold}.csv'
 
 # Save to CSV
 user_emb_df.to_csv(user_emb_csv_path, index=False)

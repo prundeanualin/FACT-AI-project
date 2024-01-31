@@ -32,12 +32,12 @@ else:
 base_path = 'data/ml-1m/'
 train_path = base_path + "train.csv"
 checkpoint_dir = 'ncf_models_explicit'
-latent_embedding_size = 32
+latent_embedding_size = 16  # We use 16 here
 layers = [2*latent_embedding_size, latent_embedding_size, int(latent_embedding_size / 2)]
 
 explicit = True  # Set to True for explicit feedback (1 to 5), False for implicit (0 or 1)
 epochs = 200
-save_every = 10  # Saves the model during training every save_every epochs
+save_every = 1  # Saves the model during training every save_every epochs
 validate_every = 1
 batch_size = 1024
 print_batches = True
