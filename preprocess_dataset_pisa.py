@@ -6,6 +6,7 @@
 import numpy as np
 import pandas as pd
 import os
+import pickle
 
 # Pick SPSS or SAS
 file_type = 'SAS'
@@ -18,6 +19,7 @@ cognitive_directory = f"PUF_{file_type}_COMBINED_CMB_STU_COG/"
 student_questionnaire_file1 = student_directory + 'cy6_ms_cmb_stu_qqq'
 student_questionnaire_file2 = student_directory + 'cy6_ms_cmb_stu_qq2'
 cognitive_file = cognitive_directory + 'cy6_ms_cmb_stu_cog'
+codebook_file, codebook_cog_sheet_name = 'Codebook_CMB.xlsx', 'CY6_MS_CMB_STU_COG (Cognitive)'
 
 train_split = 0.7
 valid_split = 0.1
@@ -88,8 +90,11 @@ def reshape_dataset(df, item_columns):
     for col in item_columns:
         df[col] = pd.to_numeric(df[col])
 
+    # Check how many missing responses are there for each item
     perform_nan_analysis(df, item_columns)
 
+    # Reshape the table so that instead of having a row per user and a column for each item, we have
+    # multiple rows per user with all the item columns aggregated into 2 columns: [item_old_id, score]
     final_df_reshaped = pd.melt(df, id_vars=student_info_columns, value_vars=item_columns,
                                 var_name='item_old_id', value_name='score')
     nr_rows_all = len(final_df_reshaped)
@@ -104,12 +109,9 @@ def reshape_dataset(df, item_columns):
     return final_df_reshaped
 
 
-def build_id_vocab(list_of_items):
-    vocab = {}
-    list_of_items.sort()
-    for new_incremental_id, old_id in enumerate(list_of_items):
-        vocab[old_id] = new_incremental_id
-    return vocab
+def build_id_remapping(list_of_items):
+    # Remap the old id to a new incremental one
+    return {old_id: new_id for new_id, old_id in enumerate(sorted(list_of_items))}
 
 
 def postprocess_columns(df, cognitive_items):
@@ -131,12 +133,10 @@ def postprocess_columns(df, cognitive_items):
 
     # Replace old ids with the new ones from the vocabulary for cognitive items and student id
     df['item_id'] = df['item_old_id']
-    cognitive_id_vocab = build_id_vocab(cognitive_items)
-    df.loc[:, 'item_id'] = df['item_id'].map(cognitive_id_vocab)
+    df.loc[:, 'item_id'] = df['item_id'].map(build_id_remapping(cognitive_items))
     student_ids = df['user_id'].unique().tolist()
-    student_id_vocab = build_id_vocab(student_ids)
     df['user_old_id'] = df['user_id']
-    df.loc[:, 'user_id'] = df['user_id'].map(student_id_vocab)
+    df.loc[:, 'user_id'] = df['user_id'].map(build_id_remapping(student_ids))
     return df
 
 
@@ -164,7 +164,7 @@ def preprocess_dataset(random_seed):
     # Columns representing the cognitive items(questions) only with a valid score
     cognitive_item_ids = cognitive_item_vocab['item_old_id'].unique().tolist()
 
-    # For the cognitive table, keep only the *merge columns* and the ones that keep the binary *item grade*
+    # For the cognitive table, keep only the *merge columns* and the ones that represent a valid question
     cog_keep_columns = [col for col in merge_columns]
     for c in cognitive_df.columns.tolist():
         if c in cognitive_item_ids:
@@ -179,18 +179,25 @@ def preprocess_dataset(random_seed):
 
     print("\n\nFinal student + cognitive table columns")
     print(final_df.columns.tolist())
-    print("Cognitive items:")
-    print(cognitive_item_ids)
+    print("Nr of cognitive items:")
+    print(len(cognitive_item_ids))
     print("Final student + cognitive table")
     print(final_df.head())
 
     final_df = reshape_dataset(final_df, cognitive_item_ids)
     final_df = postprocess_columns(final_df, cognitive_item_ids)
     final_df = pd.merge(final_df, cognitive_item_vocab, on='item_old_id')
+    build_item2knowledge(final_df, cognitive_item_ids)
 
-    final_df.to_csv('data/pisa2015/dataset.csv', index=False)
+    df_grouped_by_user = final_df.groupby(['user_id'])['item_id'].count()
+    print("Items per user analysis:")
+    print("Average number of items per user: ", df_grouped_by_user.mean())
+    print("Maximum number of items filled in by a user: ", df_grouped_by_user.max())
+    print("Minimum number of items filled in by a user: ", df_grouped_by_user.min())
 
-    print("Splitting dataset into train/validation/test + attacker train/test sets...")
+    final_df.to_csv(f'{base_path}dataset.csv', index=False)
+
+    print("Splitting dataset into train/validation/test...")
     print(f"Nr of total items: {len(final_df)}")
     train, validation, test = np.split(final_df.sample(frac=1, random_state=random_seed),
                                        [int(train_split * len(final_df)),
@@ -199,17 +206,23 @@ def preprocess_dataset(random_seed):
     print("Length of valid set: " + str(len(validation)))
     print("Length of test set: " + str(len(test)))
 
-    attacker_train, attacker_test = np.split(final_df.sample(frac=1, random_state=random_seed),
+    print("Splitting dataset into attacker train/test...")
+    # The attacker only needs one entry per user
+    attacker_dataset = final_df.drop_duplicates(subset=['user_id'])
+    remaining_perc = len(attacker_dataset) / len(final_df) * 100
+    remaining_perc = "{:.2f}".format(remaining_perc)
+    print(f"Attacker dataset size: {len(attacker_dataset)} - {remaining_perc} % of the model training size")
+    attacker_train, attacker_test = np.split(attacker_dataset.sample(frac=1, random_state=random_seed),
                                              [int(attacker_train_split * len(final_df))])
 
     print("\n\nWriting the final processed train/validate/test + attacker train/test dataframes to csv...")
 
-    train.to_csv('data/pisa2015/pisa.train.csv', index=False)
-    validation.to_csv('data/pisa2015/pisa.validation.csv', index=False)
-    test.to_csv('data/pisa2015/pisa.test.csv', index=False)
+    train.to_csv(f'{base_path}pisa.train.csv', index=False)
+    validation.to_csv(f'{base_path}pisa.validation.csv', index=False)
+    test.to_csv(f'{base_path}pisa.test.csv', index=False)
 
-    attacker_train.to_csv('data/pisa2015/pisa.attacker.train.csv', index=False)
-    attacker_test.to_csv('data/pisa2015/pisa.attacker.test.csv', index=False)
+    attacker_train.to_csv(f'{base_path}pisa.attacker.train.csv', index=False)
+    attacker_test.to_csv(f'{base_path}pisa.attacker.test.csv', index=False)
     print("Done with PISA dataset preprocessing!")
 
 
@@ -225,19 +238,38 @@ def trim_df(df, str_to_contain, pos_after_str):
 
 def build_item_vocab():
     # Read the codebook files
-    df = pd.read_excel('data/pisa2015/Codebook_CMB.xlsx', sheet_name='CY6_MS_CMB_STU_COG (Cognitive)')
+    df = pd.read_excel(base_path + codebook_file, sheet_name=codebook_cog_sheet_name)
     df1 = trim_df(df, ' - Q', 0)
-    # df2 = pd.read_excel('data/pisa2015/Codebook_CMB.xlsx', sheet_name='CY6_MS_CMB_STU_FLT (Fin. Lit.)')
+    # df2 = pd.read_excel(f'{base_path}Codebook_CMB.xlsx', sheet_name='CY6_MS_CMB_STU_FLT (Fin. Lit.)')
     # df2 = trim_df(df2, ' - Q', 0)
-    # df3 = pd.read_excel('data/pisa2015/Codebook_CMB.xlsx', sheet_name='CY6_MS_CMB_STU_CPS (Pb. Solv.)')
+    # df3 = pd.read_excel(f'{base_path}Codebook_CMB.xlsx', sheet_name='CY6_MS_CMB_STU_CPS (Pb. Solv.)')
     # df3 = trim_df(df3, ': ', 1)
     # vocab_df = pd.concat([df1, df2, df3]).reset_index(drop=True)
     vocab_df = df1
     vocab_df = vocab_df.loc[vocab_df['format'] == '0 - 1']
     vocab_df = vocab_df[['item_old_id', 'item_name']]
-    vocab_df.to_csv('data/pisa2015/item_vocab.csv', index=False)
     return vocab_df
 
+
+def build_item2knowledge(final_df, cognitive_items):
+    print("Creating the item2knowledge matrix...")
+    df_only_unique_items = final_df.drop_duplicates(subset=['item_old_id'])
+    knowledge_domains = sorted(df_only_unique_items['item_name'].unique().tolist())
+    knowledge_id_mapping = {knowledge: i for i, knowledge in enumerate(knowledge_domains)}
+    item2knowledge = np.zeros((len(cognitive_items), len(knowledge_domains)))
+    for idx, row in df_only_unique_items.iterrows():
+        c_id = row['item_id']
+        k_id = knowledge_id_mapping[row['item_name']]
+        item2knowledge[c_id][k_id] = 1.0
+    with open(f'{base_path}item2knowledge.pkl', 'wb') as handle:
+        pickle.dump(item2knowledge, handle, protocol=pickle.HIGHEST_PROTOCOL)
+    return item2knowledge
+
+
+preprocess_dataset(42)
+
+# items = df[]
+# print(len(df[]))
 # preprocess_dataset(42)
 # df = pd.read_csv('data/pisa2015/dataset.csv')
 # items = df['item_id'].unique().tolist()

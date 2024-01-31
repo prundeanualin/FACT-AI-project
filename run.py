@@ -39,7 +39,7 @@ args.add_argument("-SEED", default=4869, type=int)
 args.add_argument("-BATCH_SIZE", default=8192, type=int)
 args.add_argument("-EPOCH", default=10, type=int)
 args.add_argument("-EPOCH_DISCRIMINATOR", default=10, type=int)
-args.add_argument("-EPOCH_ATTACKER", default=10, type=int)
+args.add_argument("-EPOCH_ATTACKER", default=30, type=int)
 args.add_argument("-USER_NUM", default=462916, type=int)
 args.add_argument("-ITEM_NUM", default=593, type=int)
 args.add_argument("-KNOWLEDGE_NUM", default=16, type=int)
@@ -51,36 +51,41 @@ args.add_argument("-USE_NOFEATURE", default=True, type=bool)
 args.add_argument("-NO_FEATURE", default=0.2, type=float)
 args.add_argument("-PREPROCESS_DATA", default=False, type=bool)
 args.add_argument("-DEVICE", default='cuda', type=str)
+args.add_argument("-WANDB_ACTIVE", default=True, type=bool)
 args = args.parse_args()
 
 os.environ["CUDA_VISIBLE_DEVICES"] = str(args.CUDA)
 seed_experiments(args.SEED)
 
-model_name = f"{args.DATA}_{args.MODEL}_{args.FILTER_MODE}_λ2:{args.FAIRNESS_RATIO}_λ3:{args.FAIRNESS_RATIO_NOFEATURE}_{args.SEED}"
-print(args)
-print(model_name)
+lambda_3 = args.FAIRNESS_RATIO_NOFEATURE * args.FAIRNESS_RATIO
+model_name = f"{args.DATA}_{args.MODEL}_λ2-{args.FAIRNESS_RATIO}_λ3-{lambda_3}_{args.NO_FEATURE}_{args.SEED}"
 
-wandb.init(
-    project="FACT-fairlisa",
-    name=model_name,
-    config={
-        "dataset": args.DATA,
-        "model": args.MODEL,
-        "filter_mode": args.FILTER_MODE,
-        "λ_2": args.FAIRNESS_RATIO,
-        "λ_3": args.FAIRNESS_RATIO_NOFEATURE,
-        "ratio_data_without_sensitive_features": args.NO_FEATURE,
-        "seed": args.SEED,
-        "knowledge_dimension": args.KNOWLEDGE_NUM,
-        "latent_dimension": args.LATENT_NUM,
-        "batch_size": args.BATCH_SIZE,
-        "epochs_cd_model": args.EPOCH,
-        "lr_cd_model": args.LR,
-        "epochs_discriminator": args.EPOCH_DISCRIMINATOR,
-        "epochs_attacker": args.EPOCH_ATTACKER,
-        "lr_discriminator": args.LR_DISC
-    }
-)
+if args.WANDB_ACTIVE:
+    print("Wandb enabled")
+    wandb.init(
+        project="FACT-fairlisa",
+        name=model_name,
+        config={
+            "dataset": args.DATA,
+            "model": args.MODEL,
+            "filter_mode": args.FILTER_MODE,
+            "λ_2": args.FAIRNESS_RATIO,
+            "λ_3": lambda_3,
+            "ratio_data_without_sensitive_features": args.NO_FEATURE,
+            "seed": args.SEED,
+            "knowledge_dimension": args.KNOWLEDGE_NUM,
+            "latent_dimension": args.LATENT_NUM,
+            "batch_size": args.BATCH_SIZE,
+            "epochs_cd_model": args.EPOCH,
+            "lr_cd_model": args.LR,
+            "epochs_discriminator": args.EPOCH_DISCRIMINATOR,
+            "epochs_attacker": args.EPOCH_ATTACKER,
+            "lr_discriminator": args.LR_DISC
+        }
+    )
+else:
+    print("Wandb disabled")
+    wandb.init(mode="disabled")
 
 def transform(user, item, score, feature, nofeature=False):
     if nofeature == False:
@@ -127,6 +132,9 @@ def attacker_transform(user, feature):
     return DataLoader(dataset, batch_size=args.BATCH_SIZE, shuffle=True)
 
 
+print(args)
+print(model_name)
+
 print("load data")
 if args.DEVICE == 'cuda' and torch.cuda.is_available():
     print("--Using cuda")
@@ -137,10 +145,9 @@ else:
     print("--Using cpu")
     device = torch.device("cpu")
 
-# pkl = open("./data/" + args.DATA + "/item2knowledge.pkl", "rb")
-# item2knowledge = pickle.load(pkl)
-# pkl.close()
-item2knowledge = []
+pkl = open("./data/" + args.DATA + "/item2knowledge.pkl", "rb")
+item2knowledge = pickle.load(pkl)
+pkl.close()
 
 if args.PREPROCESS_DATA:
     preprocess_dataset(args.SEED)
@@ -354,6 +361,9 @@ for epoch in range(args.EPOCH):
     wandb.log(training_metrics)
 
 
+print("\n>> Saving the model + filter...")
+cdm.save_model("data/pisa2015/IRT/0.0_0.0_0.2_4869.pt")
+
 print("\n>> Training the attacker...")
 
 attackers = {}
@@ -403,8 +413,13 @@ for epoch in range(args.EPOCH_ATTACKER):
     print(f"-- Attacker evaluation at epoch {epoch + 1}/{args.EPOCH_ATTACKER}")
     for feature in args.FEATURES:
         print(feature)
-        print("auc:", roc_auc_score(feature_true[feature], feature_pred[feature]))
-        attacker_metrics[f"attacker/{feature}"] = roc_auc_score(feature_true[feature], feature_pred[feature])
+        auc_feature = roc_auc_score(feature_true[feature], feature_pred[feature])
+        if auc_feature > best_result[feature]:
+            print("-- New highscore!")
+            best_result[feature] = auc_feature
+            best_epoch[feature] = epoch
+        print("auc:", auc_feature)
+        attacker_metrics[f"attacker/{feature}"] = auc_feature
     wandb.log(attacker_metrics)
     for feature in args.FEATURES:
         attackers[feature].train()
@@ -412,7 +427,8 @@ for epoch in range(args.EPOCH_ATTACKER):
 print("\n>> Attacker final evaluation after training")
 for feature in args.FEATURES:
     print(feature)
-    print("auc:", roc_auc_score(feature_true[feature], feature_pred[feature]))
+    wandb.run.summary[f"attacker/{feature}"] = best_result[feature]
+    print(f"best auc: {best_result[feature]} at epoch: {best_epoch[feature]}")
 
 print("\n>> Finish")
 end_time = time.time()

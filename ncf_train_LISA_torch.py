@@ -5,7 +5,7 @@ import pandas as pd
 import numpy as np
 import random
 import os
-from ml_models import FilterModel, Discriminator
+from fairlisa_models import Filter, Discriminator
 from tqdm import tqdm
 import torch.nn.functional as F
 from sklearn.metrics import (
@@ -225,7 +225,7 @@ attacker_train, attacker_test = [
 ]
 
 # Initialize Filter
-filter_model = FilterModel(embedding_dim, layer_sizes=[embedding_dim] + args.FILTER_LAYER_SIZES)
+filter_model = Filter(embedding_dim, dense_layer_dim=args.FILTER_LAYER_SIZES[0], device=device)
 
 # Initialize discriminators
 discriminators = {}

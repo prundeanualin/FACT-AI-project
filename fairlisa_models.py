@@ -2,17 +2,20 @@ import torch
 import torch.nn as nn
 
 
-class FilterModel(nn.Module):
-    def __init__(self, embedding_dim, layer_sizes):
-        super(FilterModel, self).__init__()
-        layers = [nn.Linear(input_size, output_size) for input_size, output_size in zip(layer_sizes[:-1], layer_sizes[1:])]
-        self.dense_layers = nn.ModuleList(layers)
-        self.output_layer = nn.Linear(layer_sizes[-1], embedding_dim)
+class Filter(nn.Module):
+    def __init__(self, embedding_dim, dense_layer_dim, device):
+        super(Filter, self).__init__()
+        self.device = device
+        self.network = nn.Sequential(
+            nn.Linear(embedding_dim, dense_layer_dim),
+            nn.ReLU(),
+            nn.Linear(dense_layer_dim, dense_layer_dim),
+            nn.ReLU(),
+            nn.Linear(dense_layer_dim, embedding_dim)
+        ).to(self.device)
 
     def forward(self, x):
-        for layer in self.dense_layers:
-            x = torch.relu(layer(x))
-        return self.output_layer(x)
+        return self.network(x)
 
 
 class Discriminator(nn.Module):
