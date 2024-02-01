@@ -4,7 +4,7 @@ from torch.utils.data import TensorDataset, DataLoader
 import pandas as pd
 import numpy as np
 import os
-from fairlisa_models import Filter, Discriminator
+from model.fairlisa_models import Filter, Discriminator
 from tqdm import tqdm
 import torch.nn.functional as F
 from sklearn.metrics import (

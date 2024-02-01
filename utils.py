@@ -4,6 +4,10 @@ import numpy as np
 import os
 
 
+def model_has_knowledge_dimension(model_name):
+    return model_name == "NCDM"
+
+
 def seed_experiments(seed):
     """
     Seed the experiment, for reproducibility

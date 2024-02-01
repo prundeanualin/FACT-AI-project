@@ -5,7 +5,7 @@ import pandas as pd
 import numpy as np
 import random
 import os
-from ml_models import FilterModel, Discriminator
+from model.fairlisa_models import Filter, Discriminator
 from tqdm import tqdm
 import torch.nn.functional as F
 from sklearn.metrics import (
@@ -246,7 +246,8 @@ elif args.MODEL.lower() == 'lightgcn':
 
 
 # Initialize Filter
-filter_model = FilterModel(args.EMB_DIM, layer_sizes=[args.EMB_DIM] + args.FILTER_LAYER_SIZES)
+filter_model = Filter(args.EMB_DIM, dense_layer_dim=args.FILTER_LAYER_SIZES[0], device=device)
+
 
 # Initialize discriminators
 discriminators = {}
