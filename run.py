@@ -3,17 +3,21 @@ import argparse
 
 import torch
 import pandas as pd
+from torch.nn import BCELoss
 from tqdm import tqdm
 from sklearn.metrics import roc_auc_score
 import os
 import time
 
+# from EduCDM.MIRT import MIRT
+# from EduCDM.IRT.GD import IRT
 from model.CD import NCDM, IRT, MIRT
+
 from model.fairlisa_models import Filter
 from model.Discriminators import Discriminator
 from preprocess_dataset_pisa import preprocess_dataset, split_df
 from model.dataloader import transform, attacker_transform
-from model.trainers.cd_trainer import train_model, evaluate_model
+from model.trainers.cd_trainer import *
 from utils import * 
 
 
@@ -34,7 +38,7 @@ args.add_argument("-LAMBDA_3", default=1.0, type=float)
 args.add_argument("-CUDA", default=2, type=int)
 args.add_argument("-SEED", default=420, type=int) # seeds used are [4869, 420, 23]
 args.add_argument("-BATCH_SIZE", default=8192, type=int)
-args.add_argument("-BATCH_SIZE_ATTACKER", default=512, type=int)
+args.add_argument("-BATCH_SIZE_ATTACKER", default=256, type=int)
 args.add_argument("-EPOCH", default=10, type=int)
 args.add_argument("-EPOCH_DISCRIMINATOR", default=10, type=int)
 args.add_argument("-EPOCH_ATTACKER", default=10, type=int)
@@ -55,7 +59,7 @@ args = args.parse_args()
 os.environ["CUDA_VISIBLE_DEVICES"] = str(args.CUDA)
 seed_experiments(args.SEED)
 
-model_name = f"{args.DATA}_{args.MODEL}_Lambda1-{args.LAMBDA_1}_Lambda2-{args.LAMBDA_2}_Lambda3-{args.LAMBDA_3}_{args.RATIO_NO_FEATURE}_{args.SEED}"
+model_name = f"{args.DATA}_{args.MODEL}_Lambda1({args.LAMBDA_1})_Lambda2({args.LAMBDA_2})_Lambda3({args.LAMBDA_3})_{args.RATIO_NO_FEATURE}_{args.SEED}"
 start_time = time.time()
 
 if args.WANDB_ACTIVE:
@@ -113,6 +117,9 @@ test_data_initial = pd.read_csv("./data/" + args.DATA + "/pisa.test.csv")
 # Split the dataset based on a specified MISSING_RATIO with a seed for reproducibility.
 train_w_sensitive_features, train_without_sensitive_features = split_df(train_data_initial, args.SEED, [args.RATIO_NO_FEATURE])
 
+# train_w_sensitive_features, train_without_sensitive_features = np.split(train_data_initial.sample(frac=1, random_state=args.SEED),
+#                                    [int(args.RATIO_NO_FEATURE * len(train_data_initial))])
+
 attacker_train_data = pd.read_csv("./data/" + args.DATA + "/pisa.attacker.train.csv")
 attacker_test_data = pd.read_csv("./data/" + args.DATA + "/pisa.attacker.test.csv")
 
@@ -143,6 +150,7 @@ embedding_dim = {
 }
 
 cdm = eval(args.MODEL)(args, device)
+
 user_model_args = {
     'model': args.MODEL,
     'batch_size': args.BATCH_SIZE,
@@ -151,29 +159,27 @@ user_model_args = {
 }
 if args.TRAIN_USER_MODEL:
     print(">> Training the user model...")
-    train = transform(
+    [train] = transform(
         args.MODEL,
         args.BATCH_SIZE,
         [train_data_initial],
         sensitive_features=args.SENSITIVE_FEATURES,
         item2knowledge=item2knowledge)
-    # cdm.train(train_data_model, test_data_model, epoch=args.EPOCH, device=device)
-    # cdm.save(saved_model_base_path + f'{args.MODEL.lower()}.pt')
     cdm.to(device)
-    train_model(cdm, user_model_args, train, valid, test, device, args.SENSITIVE_FEATURES, saved_model_base_path, item2knowledge)
+    train_model(cdm, user_model_args, train, valid, test, device, saved_model_base_path)
 
-
+# exit(0)
 print("Loading the trained user model...")
 cdm.load_model(saved_model_base_path + f'{args.MODEL}.pt')
 print("Evaluating the trained user model...")
 acc, roc_auc, mae, mse = evaluate_model(cdm, user_model_args, test, device)
-
 training_metrics = {
     "model/acc": acc,
     "model/auc": roc_auc,
     "model/mae": mae,
     "model/mse": mse
 }
+wandb.log(training_metrics)
 
 discriminators = {}
 for feature in args.SENSITIVE_FEATURES:
@@ -194,8 +200,9 @@ else:
 
     print("\n>> Training the filter & discriminator...")
 
+    cdm.eval()
+
     for epoch in range(args.EPOCH):
-        cdm.eval()
         # Loop through both unlabeled and labeled data
         for is_data_with_sensitive_features, train_iter in enumerate(train_total):
             for batch_data in tqdm(train_iter, "Epoch %s " % epoch + train_total_description[is_data_with_sensitive_features]):

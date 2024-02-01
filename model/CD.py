@@ -53,7 +53,7 @@ class MIRT(BaseCD):
         self.user_embedding_layer = nn.Embedding(self.user_num, args.LATENT_NUM).to(self.device)
         self.a = nn.Embedding(self.item_num, args.LATENT_NUM).to(self.device)
         self.b = nn.Embedding(self.item_num, 1).to(self.device)
-        nn.init.xavier_uniform_(self.user_embeddings.weight)
+        nn.init.xavier_uniform_(self.user_embedding_layer.weight)
         nn.init.xavier_uniform_(self.a.weight)
         nn.init.xavier_uniform_(self.b.weight)
 

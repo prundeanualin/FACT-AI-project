@@ -11,7 +11,7 @@ from utils import *
 
 
 
-def train_model(model: BaseCD, args, train_data, validation_data, test_data, device, sensitive_features, save_base_path, item2knowledge=None):
+def train_model(model: BaseCD, args, train_data, validation_data, test_data, device, save_base_path):
     """
     args is a dict that must contain the following parameters:
     - lr: learning rate
@@ -23,6 +23,7 @@ def train_model(model: BaseCD, args, train_data, validation_data, test_data, dev
     """
     print("Training model with parameters: ", args)
     model_optimizer = torch.optim.Adam(model.parameters(), args['lr'])
+    best_acc = 0
     for epoch in range(args['epochs']):
         model.train()
 
@@ -47,12 +48,12 @@ def train_model(model: BaseCD, args, train_data, validation_data, test_data, dev
             loss.backward()
             model_optimizer.step()
         print(f"Evaluation at epoch {epoch + 1}/{args['epochs']}")
-        evaluate_model(model, args, validation_data, device)
-
-    print("-- Final evaluation of the model")
-    evaluate_model(model, args, test_data, device)
-    print("Saving model...")
-    model.save_model(save_base_path + f'{args["model"]}.pt')
+        acc, _, _, _ = evaluate_model(model, args, validation_data, device)
+        if acc > best_acc:
+            print("New best accuracy found on validation set!")
+            best_acc = acc
+            print("Saving best model...")
+            model.save_model(save_base_path + f'{args["model"]}.pt')
 
 
 def evaluate_model(model: BaseCD, args, eval_data, device, filter_model=None):

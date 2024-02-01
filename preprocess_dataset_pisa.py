@@ -199,7 +199,9 @@ def preprocess_dataset(random_seed):
 
     print("Splitting dataset into train/validation/test...")
     print(f"Nr of total items: {len(final_df)}")
-    train, validation, test = split_df(final_df, random_seed, [train_split, valid_split])
+    train, validation, test = np.split(final_df.sample(frac=1, random_state=random_seed),
+                                       [int(train_split * len(final_df)),
+                                        int((train_split + valid_split) * len(final_df))])
     print("Length of train set: " + str(len(train)))
     print("Length of valid set: " + str(len(validation)))
     print("Length of test set: " + str(len(test)))
@@ -288,6 +290,11 @@ def split_df(df, seed, ratios):
     return splits
 
 # preprocess_dataset(42)
+
+df_train = pd.read_csv('data/pisa2015/pisa.train.csv')
+df_attacker_train = pd.read_csv('data/pisa2015/pisa.attacker.train.csv')
+
+print("Ratio attacker from all is: ", len(df_attacker_train)/len(df_train))
 
 # items = df[]
 # print(len(df[]))
