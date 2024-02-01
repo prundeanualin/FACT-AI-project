@@ -135,7 +135,7 @@ saved_model_base_path = 'model/saved_user_models/'
 
 # If both lambda2 and lambda3 are 0, then we work with the Origin baseline
 # Origin has no fairness processing
-IS_ORIGIN = (args.LAMBDA_2 == 0) & (args.LAMBDA_3 == 0)
+IS_ORIGIN = (args.LAMBDA_2 == 0) and (args.LAMBDA_3 == 0)
 embedding_dim = {
     "IRT": 1,
     "MIRT": args.LATENT_NUM,
