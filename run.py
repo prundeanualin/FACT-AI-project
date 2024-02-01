@@ -35,7 +35,7 @@ args.add_argument("-CUDA", default=2, type=int)
 args.add_argument("-SEED", default=420, type=int) # seeds used are [4869, 420, 23]
 args.add_argument("-BATCH_SIZE", default=8192, type=int)
 args.add_argument("-BATCH_SIZE_ATTACKER", default=512, type=int)
-args.add_argument("-EPOCH", default=1, type=int)
+args.add_argument("-EPOCH", default=10, type=int)
 args.add_argument("-EPOCH_DISCRIMINATOR", default=10, type=int)
 args.add_argument("-EPOCH_ATTACKER", default=10, type=int)
 args.add_argument("-USER_NUM", default=462916, type=int)
@@ -56,6 +56,7 @@ os.environ["CUDA_VISIBLE_DEVICES"] = str(args.CUDA)
 seed_experiments(args.SEED)
 
 model_name = f"{args.DATA}_{args.MODEL}_Lambda1-{args.LAMBDA_1}_Lambda2-{args.LAMBDA_2}_Lambda3-{args.LAMBDA_3}_{args.RATIO_NO_FEATURE}_{args.SEED}"
+start_time = time.time()
 
 if args.WANDB_ACTIVE:
     print("Wandb enabled")
@@ -137,8 +138,6 @@ embedding_dim = {
     "MIRT": args.LATENT_NUM,
     "NCDM": args.KNOWLEDGE_NUM
 }
-
-start_time = time.time()
 
 cdm = eval(args.MODEL)(args, device)
 user_model_args = {
