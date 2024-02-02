@@ -55,7 +55,7 @@ def transform_with_knowledge_dimension(user, item, item2knowledge, score, batch_
         dataset = TensorDataset(
             torch.tensor(np.array(user), dtype=torch.int64),
             torch.tensor(np.array(item), dtype=torch.int64),
-            knowledge_emb,
+            torch.tensor(knowledge_emb, dtype=torch.int64),
             torch.tensor(np.array(score), dtype=torch.float32),
             torch.tensor(np.array(sensitive_features), dtype=torch.float32),
         )
@@ -63,7 +63,7 @@ def transform_with_knowledge_dimension(user, item, item2knowledge, score, batch_
         dataset = TensorDataset(
             torch.tensor(np.array(user), dtype=torch.int64),
             torch.tensor(np.array(item), dtype=torch.int64),
-            knowledge_emb,
+            torch.tensor(knowledge_emb, dtype=torch.int64),
             torch.tensor(np.array(score), dtype=torch.float32),
         )
     return DataLoader(dataset, batch_size=batch_size, shuffle=True)

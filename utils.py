@@ -26,3 +26,11 @@ def seed_experiments(seed):
 
     random.seed(seed)
     np.random.seed(seed)
+
+import statistics
+
+datas = {
+   'acc': [0.6566, 0.6567, 0.6552],
+    'auc': [0.7160, 0.7158, 0.7108],
+    'mae': [0.4235, 0.4234, 0.4229]
+}

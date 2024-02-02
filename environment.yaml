@@ -15,4 +15,5 @@ dependencies:
       - scikit-learn
       - tqdm
       - openpyxl
+      - matplotlib
       - wandb

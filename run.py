@@ -11,6 +11,7 @@ import time
 
 # from EduCDM.MIRT import MIRT
 # from EduCDM.IRT.GD import IRT
+# from EduCDM.NCDM.NCDM import NCDM
 from model.CD import NCDM, IRT, MIRT
 
 from model.fairlisa_models import Filter
@@ -26,6 +27,8 @@ import wandb
 args = argparse.ArgumentParser()
 args.add_argument("-DATA", default="pisa2015", type=str)
 args.add_argument("-TRAIN_USER_MODEL", default=False, type=bool)
+args.add_argument("--WANDB_ACTIVE", default=True, type=bool, action=argparse.BooleanOptionalAction)
+
 args.add_argument("-FILTER_MODE", default="separate", type=str)
 args.add_argument(
     "-SENSITIVE_FEATURES",
@@ -53,7 +56,6 @@ args.add_argument("-USE_NOFEATURE", default=True, type=bool)
 args.add_argument("-RATIO_NO_FEATURE", default=0.2, type=float)
 args.add_argument("-PREPROCESS_DATA", default=False, type=bool)
 args.add_argument("-DEVICE", default='cuda', type=str)
-args.add_argument("--WANDB_ACTIVE", default=True, type=bool, action=argparse.BooleanOptionalAction)
 args = args.parse_args()
 
 os.environ["CUDA_VISIBLE_DEVICES"] = str(args.CUDA)

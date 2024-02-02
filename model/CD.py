@@ -1,5 +1,6 @@
 import torch
 import torch.nn as nn
+import torch.nn.functional as F
 
 
 class BaseCD(nn.Module):
@@ -76,7 +77,15 @@ class MIRT(BaseCD):
     def get_user_embeddings(self, user_id):
         return self.user_embedding_layer(user_id)
 
+
+class PosLinear(nn.Linear):
+    def forward(self, input: torch.Tensor) -> torch.Tensor:
+        weight = 2 * F.relu(1 * torch.neg(self.weight)) + self.weight
+        return F.linear(input, weight, self.bias)
+
+
 class NCDM(BaseCD):
+
     def __init__(self, args, device):
         super(NCDM, self).__init__(args, device)
         self.knowledge_dim = args.KNOWLEDGE_NUM
@@ -85,13 +94,13 @@ class NCDM(BaseCD):
         self.user_embedding_layer = nn.Embedding(self.user_num, self.knowledge_dim).to(self.device)
         self.k_difficulty = nn.Embedding(self.item_num, self.knowledge_dim).to(self.device)
         self.e_difficulty = nn.Embedding(self.item_num, 1).to(self.device)
-        self.prednet_full1 = nn.Linear(self.prednet_input_len, self.prednet_len1).to(
+        self.prednet_full1 = PosLinear(self.prednet_input_len, self.prednet_len1).to(
             self.device
         )
         self.drop_1 = nn.Dropout(p=0.5).to(self.device)
-        self.prednet_full2 = nn.Linear(self.prednet_len1, self.prednet_len2).to(self.device)
+        self.prednet_full2 = PosLinear(self.prednet_len1, self.prednet_len2).to(self.device)
         self.drop_2 = nn.Dropout(p=0.5).to(self.device)
-        self.prednet_full3 = nn.Linear(self.prednet_len2, 1).to(self.device)
+        self.prednet_full3 = PosLinear(self.prednet_len2, 1).to(self.device)
         nn.init.xavier_uniform_(self.user_embedding_layer.weight)
         nn.init.xavier_uniform_(self.k_difficulty.weight)
         nn.init.xavier_uniform_(self.e_difficulty.weight)

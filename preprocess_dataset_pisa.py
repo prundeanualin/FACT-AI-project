@@ -291,10 +291,10 @@ def split_df(df, seed, ratios):
 
 # preprocess_dataset(42)
 
-df_train = pd.read_csv('data/pisa2015/pisa.train.csv')
-df_attacker_train = pd.read_csv('data/pisa2015/pisa.attacker.train.csv')
-
-print("Ratio attacker from all is: ", len(df_attacker_train)/len(df_train))
+# df_train = pd.read_csv('data/pisa2015/pisa.train.csv')
+# df_attacker_train = pd.read_csv('data/pisa2015/pisa.attacker.train.csv')
+#
+# print("Ratio attacker from all is: ", len(df_attacker_train)/len(df_train))
 
 # items = df[]
 # print(len(df[]))
