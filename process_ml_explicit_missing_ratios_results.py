@@ -131,7 +131,7 @@ def create_table_for_missing_ratio(df, missing_ratio, replace_origin=False):
 
 # Create tables for missing ratios
 for missing_ratio in missing_ratios:
-    table = create_table_for_missing_ratio(df, missing_ratio)
+    table = create_table_for_missing_ratio(df, missing_ratio, replace_origin=replace_origin)
     print(table)
 
     # Save the tables for missing ratios
