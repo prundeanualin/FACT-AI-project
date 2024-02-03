@@ -1,8 +1,14 @@
+import argparse
 import os
 import pandas as pd
 import re
 from utils_ml import save_table_latex, plot_auc_performance
 
+
+# Arguments
+args = argparse.ArgumentParser()
+args.add_argument("-OVERFITTED", default=False, type=bool)
+args = args.parse_args()
 
 # Directory structure setup
 base_dir = "ml_experiments_results"
@@ -12,29 +18,6 @@ sub_dir = file_name.split('.')[0]  # Use the file name as directory name without
 file_path = os.path.join(base_dir, sub_dir, file_name)
 
 missing_ratios = [0.2, 0.4, 0.6, 0.8, 0.95]
-replace_origin = file_name == "ml_explicit_missing_ratios_results.txt"
-
-# This is only for one run that used old code "ml_explicit_missing_ratios_results.txt"
-# Set replace_origin to False if you're re-running the experiment (Exp. 1) by uncommenting the line below:
-# replace_origin = False
-origin_replacement_data = {
-    'NCF': {
-        'Mean Absolute Error': 0.6909,
-        'Mean Squared Error': 0.9451,
-        'Root Mean Squared Error': 0.9722,
-        'AUC for Gender': 0.5068,
-        'AUC for Age': 0.5003,
-        'AUC for Occupation': 0.5103
-    },
-    'PMF': {
-        'Mean Absolute Error': 0.6868,
-        'Mean Squared Error': 0.9747,
-        'Root Mean Squared Error': 0.9873,
-        'AUC for Gender': 0.7203,
-        'AUC for Age': 0.5818,
-        'AUC for Occupation': 0.5253
-    }
-}
 
 # Initialize variables to store the parsed data
 data = []
@@ -97,35 +80,23 @@ df = pd.DataFrame(data)
 
 
 # Function to create a table for a specific missing ratio
-def create_table_for_missing_ratio(df, missing_ratio, replace_origin=False):
+def create_table_for_missing_ratio(df, missing_ratio):
     final_columns = ['Model', 'Method', 'AUC-G', 'AUC-A', 'AUC-O', 'RMSE']
     final_data = []
     df_filtered = df[df['MISSING_RATIO'] == missing_ratio]
     for model in ['PMF', 'NCF']:
         for method in ['Origin', 'ComFair', 'FairLISA']:
-            if replace_origin and method == 'Origin':
-                # Use replacement data for Origin
-                replacement = origin_replacement_data[model]
+            model_data = df_filtered[(df_filtered['MODEL'] == model) &
+                                     (df_filtered['Method'] == method)]
+            if not model_data.empty:
                 final_data.append([
                     model,
                     method,
-                    replacement['AUC for Gender'],
-                    replacement['AUC for Age'],
-                    replacement['AUC for Occupation'],
-                    replacement['Root Mean Squared Error']
+                    model_data.iloc[0]['AUC for Gender'],
+                    model_data.iloc[0]['AUC for Age'],
+                    model_data.iloc[0]['AUC for Occupation'],
+                    model_data.iloc[0]['Root Mean Squared Error']
                 ])
-            else:
-                model_data = df_filtered[(df_filtered['MODEL'] == model) &
-                                         (df_filtered['Method'] == method)]
-                if not model_data.empty:
-                    final_data.append([
-                        model,
-                        method,
-                        model_data.iloc[0]['AUC for Gender'],
-                        model_data.iloc[0]['AUC for Age'],
-                        model_data.iloc[0]['AUC for Occupation'],
-                        model_data.iloc[0]['Root Mean Squared Error']
-                    ])
     return pd.DataFrame(final_data, columns=final_columns)
 
 

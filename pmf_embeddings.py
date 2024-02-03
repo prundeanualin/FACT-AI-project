@@ -1,7 +1,14 @@
+import argparse
 import numpy as np
 import pandas as pd
-
 from user_models import PMF
+
+
+# Arguments
+args = argparse.ArgumentParser()
+# Rating threshold for binarizing data, default=1, only for implicit feedback
+args.add_argument("-BINARIZATION_THRESHOLD", default=1, type=int)
+args = args.parse_args()
 
 
 base_path = 'data/ml-1m/'
@@ -9,7 +16,7 @@ train_path = base_path + "train.csv"
 checkpoint_dir = 'pmf_models'
 latent_embedding_size = 32
 explicit = False  # Set to True for explicit feedback (1 to 5), False for implicit (0 or 1)
-threshold = 3  # Threshold model to load used
+threshold = args.BINARIZATION_THRESHOLD  # Threshold model to load used
 epoch = 50  # Epoch to load the model on, pick the one with highest validation performance,
 # we pick 50 for threshold 3 implicit, 100 for threshold 1 implicit because they had the best valid performance
 

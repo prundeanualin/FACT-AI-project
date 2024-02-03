@@ -1,12 +1,19 @@
+import argparse
 import numpy as np
 import pandas as pd
 from utils_ml import load_ncf_model, ncf_get_movie_embeddings, ncf_get_user_embeddings
 
 
+# Arguments
+args = argparse.ArgumentParser()
+args.add_argument("-BINARIZATION_THRESHOLD", default=1, type=int)
+args = args.parse_args()
+
+
 base_path = "data/ml-1m/"
 model_dir = "ncf_models/"
 epoch = 20
-threshold = 3
+threshold = args.BINARIZATION_THRESHOLD
 model_path = f"{model_dir}thresh_{threshold}_epoch_{epoch}"
 
 model = load_ncf_model(model_path, base_path)

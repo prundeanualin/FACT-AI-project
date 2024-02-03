@@ -1,3 +1,4 @@
+import argparse
 import os
 from recommenders.models.ncf.ncf_singlenode import NCF
 from recommenders.models.ncf.dataset import Dataset as NCFDataset
@@ -5,20 +6,26 @@ import pandas as pd
 from sklearn.metrics import mean_squared_error
 import numpy as np
 import pickle
-from utils_ml import load_ncf_model, ncf_get_movie_embeddings, ncf_get_user_embeddings
+from utils_ml import load_ncf_model
 
 
-n_epochs = 40
+# Arguments
+args = argparse.ArgumentParser()
+# Rating threshold for binarizing data, default=1, only for implicit feedback
+args.add_argument("-BINARIZATION_THRESHOLD", default=1, type=int)
+args = args.parse_args()
+
+n_epochs = 20
 model_type = 'mlp'
 use_test_data = False  # Change this to True when done with hyperparameter-tuning, use False for validation data
 only_load = False  # Set to False for training, True for loading the model only
-overwrite_test_file_full = False  # Change to False if you don't want to re-create the full test file, change to True
+overwrite_test_file_full = True  # Change to False if you don't want to re-create the full test file, change to True
 # if using changed dataset
 binary = False  # Set this to True if you want to convert ratings in a binary fashion using recommenders package i.e.
 # set to 1 if rating greater than 1 set to 0 otherwise
 manual_thresholding = not binary  # If not using recommenders package for binarizing we will binary based on
 # threshold manually
-threshold = 3
+threshold = args.BINARIZATION_THRESHOLD
 model_dir = f"ncf_models/thresh_{threshold}_epoch_{n_epochs}"
 
 # Check if the directory exists, and create it if it doesn't

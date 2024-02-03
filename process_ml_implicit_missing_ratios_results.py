@@ -1,8 +1,15 @@
+import argparse
 import os
 import pandas as pd
 import re
 from utils_ml import save_table_latex, plot_auc_performance
 
+
+# Arguments
+args = argparse.ArgumentParser()
+# Rating threshold for binarizing data, default=1, only for implicit feedback
+args.add_argument("-BINARIZATION_THRESHOLD", default=1, type=int)
+args = args.parse_args()
 
 # Function to create a table for a specific missing ratio
 def create_table_for_missing_ratio(df, missing_ratio):
@@ -27,11 +34,14 @@ def create_table_for_missing_ratio(df, missing_ratio):
 
 # Directory structure setup
 base_dir = "ml_experiments_results"
-file_name = 'ml_implicit_missing_ratios_results_thresh_3.txt'
+if args.BINARIZATION_THRESHOLD == 1:
+    file_name = 'ml_implicit_missing_ratios_results.txt'
+else:
+    file_name = f'ml_implicit_missing_ratios_results_thresh_{args.BINARIZATION_THRESHOLD}.txt'
 split_name = file_name.split('.')[0]
 
-model_specific_name = "(Binarize Threshold 3)" if \
-    (split_name.split("_")[-2] == "thresh" and split_name.split("_")[-1] == "3") else ""
+model_specific_name = f"(Binarize Threshold {args.BINARIZATION_THRESHOLD})" if \
+    (split_name.split("_")[-2] == "thresh" and split_name.split("_")[-1] == str(args.BINARIZATION_THRESHOLD)) else ""
 sub_dir = split_name  # Use the file name as directory name without the file extension
 file_path = os.path.join(base_dir, sub_dir, file_name)
 
