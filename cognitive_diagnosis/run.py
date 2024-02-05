@@ -7,44 +7,10 @@ import time
 from cognitive_diagnosis.plotter import results_file
 from model.fairlisa_models import Filter
 from model.Discriminators import Discriminator
-from preprocess_dataset_pisa import preprocess_dataset, split_df
+from preprocess_dataset_pisa import split_df
 from cognitive_diagnosis.dataloader import transform, attacker_transform
 from cognitive_diagnosis.cd_trainer import *
 from model.utils import *
-
-
-args = argparse.ArgumentParser()
-args.add_argument("-DATA", default="pisa2015", type=str)
-args.add_argument("-TRAIN_USER_MODEL", default=False, type=bool)
-
-args.add_argument("-FILTER_MODE", default="separate", type=str)
-args.add_argument(
-    "-SENSITIVE_FEATURES",
-    default=["OECD", "GENDER", "EDU", "ECONOMIC"],
-    type=list,
-)  # ["OECD", "GENDER", "EDU", "ECONOMIC"]
-args.add_argument("-LAMBDA_1", default=1.0, type=float)
-args.add_argument("-LAMBDA_2", default=2.0, type=float)
-args.add_argument("-LAMBDA_3", default=1.0, type=float)
-args.add_argument("-CUDA", default=2, type=int)
-args.add_argument("-SEED", default=420, type=int) # seeds used are [4869, 420, 23]
-args.add_argument("-BATCH_SIZE", default=8192, type=int)
-args.add_argument("-BATCH_SIZE_ATTACKER", default=256, type=int)
-args.add_argument("-EPOCH", default=10, type=int)
-args.add_argument("-EPOCH_DISCRIMINATOR", default=10, type=int)
-args.add_argument("-EPOCH_ATTACKER", default=10, type=int)
-args.add_argument("-USER_NUM", default=462916, type=int)
-args.add_argument("-ITEM_NUM", default=593, type=int)
-args.add_argument("-KNOWLEDGE_NUM", default=128, type=int)
-args.add_argument("-LATENT_NUM", default=16, type=int)
-args.add_argument("-MODEL", default="MIRT", type=str)
-args.add_argument("-LR", default=0.001, type=float)
-args.add_argument("-LR_DISC", default=0.01, type=float)
-args.add_argument("-USE_NOFEATURE", default=True, type=bool)
-args.add_argument("-RATIO_NO_FEATURE", default=0.2, type=float)
-args.add_argument("-PREPROCESS_DATA", default=False, type=bool)
-args.add_argument("-DEVICE", default='cuda', type=str)
-args = args.parse_args()
 
 
 def set_device(args):
@@ -87,7 +53,7 @@ def train_user_model(args, device):
     cdm.to(device)
     train_model(cdm, user_model_args, train, valid, test, device, saved_model_base_path)
 
-def run(args, device=None):
+def run(args, device):
 
     os.environ["CUDA_VISIBLE_DEVICES"] = str(args.CUDA)
     seed_experiments(args.SEED)
@@ -99,15 +65,10 @@ def run(args, device=None):
     print(model_name)
 
     print("load data")
-    if device is None:
-        device = set_device(args)
 
     pkl = open("./data/" + args.DATA + "/item2knowledge.pkl", "rb")
     item2knowledge = pickle.load(pkl)
     pkl.close()
-
-    if args.PREPROCESS_DATA:
-        preprocess_dataset(args.SEED)
 
     train_data_initial = pd.read_csv("./data/" + args.DATA + "/pisa.train.csv")
     valid_data_initial = pd.read_csv("./data/" + args.DATA + "/pisa.validation.csv")
@@ -145,9 +106,6 @@ def run(args, device=None):
         "MIRT": args.LATENT_NUM,
         "NCDM": args.KNOWLEDGE_NUM
     }
-
-    if args.TRAIN_USER_MODEL:
-        train_user_model(args, device)
 
     cdm = eval(args.MODEL)(args, device)
     user_model_args = {
