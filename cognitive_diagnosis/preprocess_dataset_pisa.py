@@ -12,7 +12,7 @@ import pickle
 file_type = 'SAS'
 formats = {'SAS': '.sas7bdat', 'SPSS': '.sav'}
 
-base_path = 'data/pisa2015/'
+base_path = '../data/pisa2015/'
 student_directory = f"PUF_{file_type}_COMBINED_CMB_STU_QQQ/"
 cognitive_directory = f"PUF_{file_type}_COMBINED_CMB_STU_COG/"
 

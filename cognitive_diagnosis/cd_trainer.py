@@ -9,7 +9,13 @@ from sklearn.metrics import (
 from model.CD import BaseCD
 from model.utils import *
 
+saved_model_base_path = 'cognitive_diagnosis/saved_user_models/'
 
+methods = {
+    'Origin': [0, 0],
+    'ComFair': [2.0, 0],
+    'FairLISA': [2.0, 1.0]
+}
 
 def train_model(model: BaseCD, args, train_data, validation_data, test_data, device, save_base_path):
     """

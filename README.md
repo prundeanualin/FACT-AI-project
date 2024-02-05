@@ -42,8 +42,9 @@ python setup_directories.py
 python preprocess_dataset_movielens.py
 ```
 ---
+# Recommender Systems (MovieLens1M)
 
-## User models - Recommender Systems (MovieLens1M)
+## User models
 
 By default, use the explicit feedback scenario:
 
@@ -175,6 +176,40 @@ Run this for processing results .txt into plots/tables:
 ```
 python process_ml_explicit_lambdas.py
 ```
+---
+# Cognitive Diagnosis (PISA2015)
+
+For running the cognitive diagnosis experiments, the following parameters can be tweaked:
+
+
+```
+python <experiment_file>.py -MODEL MIRT -TRAIN_USER_MODEL True -PREPROCESS_DATA True -SEED 420
+```
+
+- The default user model is MIRT. You can change the underlying user model to one of [IRT, MIRT, NCDM]
+- You can set to train the user model from the scratch, if it has not been trained before
+- You can set to perform data preprocessing, if it has not been done before
+- You can change the seed value (default is 420)
+
+## Run the missing ratios experiments
+
+```
+python run_experiment_missing_ratios.py
+```
+
+All 3 fairness frameworks (Origin, ComFair and FairLISA) are tested with different ratios of data without sensitive labels.
+The missing raios are [0.2, 0.4, 0.6, 0.8, 0.95]. The corresponding plots are also generated afterwards.
+
+---
+
+## Run the ablations for lambda2 and lambda3
+
+```
+python run_experiment_lambdas.py
+```
+For the FairLISA fairness framework, the fairness performance is tested with both lambda values (lambda1, lambda2)
+varying between [0, 0.5, 1, 1.5] while the other is kept fixed at 0. The corresponding plots are also generated afterwards.
+
 ---
 
 # From the authors' README:
