@@ -102,12 +102,12 @@ def create_table_for_missing_ratio(df, missing_ratio):
 
 # Create tables for missing ratios
 for missing_ratio in missing_ratios:
-    table = create_table_for_missing_ratio(df, missing_ratio, replace_origin=replace_origin)
+    table = create_table_for_missing_ratio(df, missing_ratio)
     print(table)
 
     # Save the tables for missing ratios
     save_table_latex(table, missing_ratio, base_dir, sub_dir)
 
 for model in ['PMF', 'NCF']:
-    plot_auc_performance(df, model, missing_ratios, base_dir, sub_dir, replace_origin, origin_replacement_data,
+    plot_auc_performance(df, model, missing_ratios, base_dir, sub_dir,
                          model_specific_name)

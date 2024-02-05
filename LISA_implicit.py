@@ -4,7 +4,7 @@ from torch.utils.data import TensorDataset, DataLoader
 import pandas as pd
 import numpy as np
 import os
-from fairlisa_models import Filter, Discriminator
+from model.fairlisa_models import Filter, Discriminator
 from tqdm import tqdm
 import torch.nn.functional as F
 from sklearn.metrics import (
@@ -18,8 +18,9 @@ from sklearn.metrics import (
     precision_recall_curve,
     auc
 )
-from utils import seed_experiments
 from utils_ml import calculate_auc_score_for_feature, split_dataset, write_args_to_file, setup_file_path
+from sklearn.preprocessing import label_binarize
+from model.utils import seed_experiments
 
 # Arguments
 args = argparse.ArgumentParser()

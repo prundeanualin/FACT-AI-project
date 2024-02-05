@@ -213,7 +213,7 @@ def preprocess_dataset(random_seed):
     remaining_perc = "{:.2f}".format(remaining_perc)
     print(f"Attacker dataset size: {len(attacker_dataset)} - {remaining_perc} % of the model training size")
     attacker_train, attacker_test = np.split(attacker_dataset.sample(frac=1, random_state=random_seed),
-                                             [int(attacker_train_split * len(final_df))])
+                                             [int(attacker_train_split * len(attacker_dataset))])
 
     print("\n\nWriting the final processed train/validate/test + attacker train/test dataframes to csv...")
 
@@ -255,6 +255,7 @@ def build_item2knowledge(final_df, cognitive_items):
     print("Creating the item2knowledge matrix...")
     df_only_unique_items = final_df.drop_duplicates(subset=['item_old_id'])
     knowledge_domains = sorted(df_only_unique_items['item_name'].unique().tolist())
+    print("Nr of knowledge domains: ", len(knowledge_domains))
     knowledge_id_mapping = {knowledge: i for i, knowledge in enumerate(knowledge_domains)}
     item2knowledge = np.zeros((len(cognitive_items), len(knowledge_domains)))
     for idx, row in df_only_unique_items.iterrows():
@@ -266,7 +267,34 @@ def build_item2knowledge(final_df, cognitive_items):
     return item2knowledge
 
 
-preprocess_dataset(42)
+def split_df(df, seed, ratios):
+    """
+    Split the dataset based on the user id's, so that there is no common user in the resulting splits.
+    :param ratios: list of ratios to split the dataset
+    """
+    # Reshuffle dataset
+    df = df.sample(frac=1, random_state=seed).reset_index(drop=True)
+    # Get the unique use ids
+    user_ids = df['user_id'].unique().tolist()
+    nr_users = len(user_ids)
+    # Split based on the user ids
+    splits = []
+    ratio_idx = 0
+    for r in ratios:
+        prev_ratio_idx = ratio_idx
+        ratio_idx += r
+        split = df[df['user_id'].isin(user_ids[int(prev_ratio_idx * nr_users):int(ratio_idx * nr_users)])]
+        splits.append(split)
+    final_split = df[df['user_id'].isin(user_ids[int(ratio_idx * nr_users):])]
+    splits.append(final_split)
+    return splits
+
+# preprocess_dataset(42)
+
+# df_train = pd.read_csv('data/pisa2015/pisa.train.csv')
+# df_attacker_train = pd.read_csv('data/pisa2015/pisa.attacker.train.csv')
+#
+# print("Ratio attacker from all is: ", len(df_attacker_train)/len(df_train))
 
 # items = df[]
 # print(len(df[]))
