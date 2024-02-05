@@ -10,14 +10,16 @@ import torch.nn.functional as F
 from sklearn.metrics import (
     roc_auc_score,
     accuracy_score,
-    mean_absolute_error,
+    confusion_matrix,
     mean_squared_error,
     precision_score,
     recall_score,
-    f1_score
+    f1_score,
+    precision_recall_curve,
+    auc
 )
-from sklearn.preprocessing import label_binarize
 from utils import seed_experiments
+from utils_ml import calculate_auc_score_for_feature, split_dataset, write_args_to_file, setup_file_path
 
 # Arguments
 args = argparse.ArgumentParser()
@@ -46,15 +48,23 @@ args.add_argument("-MISSING_RATIO", default=0.2, type=float)
 args.add_argument("-DEVICE", default='cuda', type=str)
 args.add_argument("-USE_TEST_DATA", default=False, type=bool)
 # Specify the file name for saving results
-args.add_argument("-RESULTS_FILENAME", default="ml_explicit_missing_ratios_results.txt", type=str)
+args.add_argument("-RESULTS_FILENAME", default="ml_implicit_missing_ratios_results.txt", type=str)
 args.add_argument("-SAVE_RES_TO_TXT", default=False, type=str)
 args.add_argument("-ORIGIN", default=False, type=bool)
+args.add_argument("-BINARIZE_THRESHOLD", default=1, type=int)
+args.add_argument("-EMB_DIM", default=32, type=int)
+args.add_argument("-RESULTS_DIR", default="ml_experiments_results", type=str)
 args = args.parse_args()
 
 seed_experiments(args.SEED)
 model_name = args.MODEL
 print(args)
 print(f"Model: {model_name}")
+
+# Create dirs and .txt
+if args.SAVE_RES_TO_TXT:
+    file_path = setup_file_path(base_dir=args.RESULTS_DIR, results_filename=args.RESULTS_FILENAME)
+    current_time = write_args_to_file(args, file_path=file_path)
 
 # Set device to GPU or CPU
 if args.DEVICE == 'cuda' and torch.cuda.is_available():
@@ -73,15 +83,28 @@ test = pd.read_csv(args.DATA_BASE_PATH + "test.csv")
 attacker_train = pd.read_csv(args.DATA_BASE_PATH + "attacker_train.csv")
 attacker_test = pd.read_csv(args.DATA_BASE_PATH + "attacker_test.csv")
 
-user_embeddings = pd.read_csv(args.DATA_BASE_PATH + f"{args.MODEL.lower()}_user_embs.csv")
-movie_embeddings = pd.read_csv(args.DATA_BASE_PATH + f"{args.MODEL.lower()}_movie_embs.csv")
+try:
+    user_emb_file = f"{args.DATA_BASE_PATH}{args.MODEL.lower()}_user_embs_{args.EMB_DIM}_thresh_{args.BINARIZE_THRESHOLD}.csv"
+    user_embeddings = pd.read_csv(user_emb_file)
+except FileNotFoundError:
+    print(f"The file {user_emb_file} does not exist. It should be for {args.MODEL.lower()} model with embedding size {args.EMB_DIM} and binarize threshold {args.BINARIZE_THRESHOLD}.")
+    print(f"Change parameters MODEL, EMB_DIM, BINARIZE_THRESHOLD accordingly or create the embeddings. ")
+try:
+    movie_emb_file = f"{args.DATA_BASE_PATH}{args.MODEL.lower()}_movie_embs_{args.EMB_DIM}_thresh_{args.BINARIZE_THRESHOLD}.csv"
+    movie_embeddings = pd.read_csv(movie_emb_file)
+except FileNotFoundError:
+    print(f"The file {movie_emb_file} does not exist. It should be for {args.MODEL.lower()} model with embedding size {args.EMB_DIM} and binarize threshold {args.BINARIZE_THRESHOLD}.")
+    print(f"Change parameters MODEL, EMB_DIM, BINARIZE_THRESHOLD accordingly or create the embeddings. ")
 
 embedding_dim = len(user_embeddings.columns) - 1
 
 # Convert ratings to binary here
-train['Rating'] = (train['Rating'] > 1).astype(int)
-valid['Rating'] = (valid['Rating'] > 1).astype(int)
-test['Rating'] = (test['Rating'] > 1).astype(int)
+train['Rating'] = (train['Rating'] > args.BINARIZE_THRESHOLD).astype(int)
+valid['Rating'] = (valid['Rating'] > args.BINARIZE_THRESHOLD).astype(int)
+test['Rating'] = (test['Rating'] > args.BINARIZE_THRESHOLD).astype(int)
+
+# Define number of classes to predict for sensitive features (e.g. 2 for gender)
+num_classes = {feature: len(train[feature].unique()) for feature in args.SENSITIVE_FEATURES}
 
 # Merge the user_embeddings with train, test, and valid DataFrames on 'UserID'
 print("Merging tables...")
@@ -95,47 +118,6 @@ attacker_test = attacker_test.merge(user_embeddings, on='UserID', how='left')
 train = train.merge(movie_embeddings, on='MovieID', how='left')
 test = test.merge(movie_embeddings, on='MovieID', how='left')
 valid = valid.merge(movie_embeddings, on='MovieID', how='left')
-
-
-def split_dataset(data, missing_ratio, seed):
-    """
-    Split the dataset based on a specified MISSING_RATIO with a seed for reproducibility.
-
-    Args:
-    data (DataFrame): The original dataset.
-    missing_ratio (float): The ratio of data to be placed in train_data_nofeature.
-    seed (int): The seed for the random number generator.
-
-    Returns:
-    tuple: Two DataFrames, train_data and train_data_nofeature.
-    """
-
-    # Calculate the number of records needed for the desired ratio
-    target_record_count = int(len(data) * (1 - missing_ratio))
-
-    # Get unique user IDs
-    unique_user_ids = data['UserID'].unique()
-
-    # Shuffle the user IDs
-    np.random.shuffle(unique_user_ids)
-
-    # Initialize variables to keep track of selected users and record count
-    selected_users = []
-    selected_record_count = 0
-
-    # Select users until the target record count is reached
-    for user_id in unique_user_ids:
-        user_record_count = len(data[data['UserID'] == user_id])
-        if selected_record_count + user_record_count > target_record_count:
-            break
-        selected_users.append(user_id)
-        selected_record_count += user_record_count
-
-    # Split the dataset
-    train_data = data[data['UserID'].isin(selected_users)]
-    train_data_nofeature = data[~data['UserID'].isin(selected_users)]
-
-    return train_data, train_data_nofeature
 
 
 def attacker_transform(user, gender, age, occupation, user_emb_data):
@@ -172,23 +154,6 @@ def transform(user, item, score, gender, age, occupation, user_emb_data, movie_e
     return DataLoader(dataset, batch_size=args.BATCH_SIZE, shuffle=True)
 
 
-def calculate_auc_score_for_feature(feature_true, feature_pred):
-    n_classes = len(np.unique(feature_true))
-
-    # Binarize the true labels for OvR calculation
-    true_binarized = label_binarize(feature_true, classes=np.arange(n_classes))
-
-    # Predictions should be an array with shape [n_samples, n_classes]
-    pred = np.array(feature_pred)
-
-    if n_classes == 2:
-        # Binary classification
-        return roc_auc_score(true_binarized, pred[:, 1])
-    else:
-        # Multi-class classification
-        return roc_auc_score(true_binarized, pred, multi_class='ovr')
-
-
 print("Splitting train data based on missing ratio...")
 train, train_nofeature = split_dataset(train, args.MISSING_RATIO, args.SEED)
 
@@ -200,9 +165,6 @@ print("train_data: {:.2f}% of total records, {:.2f}% of total users".format(
     len(train) / total_records * 100, len(train['UserID'].unique()) / total_users * 100))
 print("train_data_nofeature: {:.2f}% of total records, {:.2f}% of total users".format(
     len(train_nofeature) / total_records * 100, len(train_nofeature['UserID'].unique()) / total_users * 100))
-
-# Define number of classes to predict for sensitive features (e.g. 2 for gender)
-num_classes = {feature: len(train[feature].unique()) for feature in args.SENSITIVE_FEATURES}
 
 # Get DataLoaders
 print("Getting DataLoaders...")
@@ -359,35 +321,46 @@ for batch_data in tqdm(test if args.USE_TEST_DATA else valid, desc=f"Testing (Fi
 y_pred_binary = [1 if x > 0.5 else 0 for x in y_pred]
 
 mse = mean_squared_error(y_true, y_pred)
-
-# Calculate RMSE
 rmse = np.sqrt(mse)
 
+acc = accuracy_score(y_true, y_pred_binary)
+prec = precision_score(y_true, y_pred_binary)
+recall = recall_score(y_true, y_pred_binary)
+f1 = f1_score(y_true, y_pred_binary)
+roc_auc = roc_auc_score(y_true, y_pred)
+
+precision_curve, recall_curve, _ = precision_recall_curve(y_true, y_pred)
+pr_auc = auc(recall_curve, precision_curve)
+
+tn, fp, fn, tp = confusion_matrix(y_true, y_pred_binary).ravel()
+
+specificity = tn / (tn + fp)
+
 print(f"Evaluation Results User Model (Filtered):")
-print(f"Accuracy: {accuracy_score(y_true, y_pred_binary):.4f}")
-print(f"ROC AUC: {roc_auc_score(y_true, y_pred):.4f}")
-print(f"Mean Absolute Error: {mean_absolute_error(y_true, y_pred):.4f}")
+print(f"Accuracy: {acc:.4f}")
+print(f"ROC AUC: {roc_auc:.4f}")
+print(f"Precision-Recall AUC: {pr_auc:.4f}")
+print()
+# Added these:
+print(f"Precision: {prec:.4f}")
+print(f"Recall: {recall:.4f}")
+print(f"F1 Score: {f1:.4f}")
+print(f"Specificity: {specificity:.4f}")
+print()
 print(f"Mean Squared Error: {mse:.4f}")
 print(f"Root Mean Squared Error: {rmse:.4f}")
-
-# Added these:
-print(f"Precision: {precision_score(y_true, y_pred_binary):.4f}")
-print(f"Recall: {recall_score(y_true, y_pred_binary):.4f}")
-print(f"F1 Score: {f1_score(y_true, y_pred_binary):.4f}")
-print()
 
 filter_model.train()
 
 # Initialize attackers (newly initialized discriminator models) to extract sensitive attributes from filtered
 # user representations
-if args.MODEL == "NCF":
-    attackers = {}
-    attacker_trainers = {}
-    for feature in args.SENSITIVE_FEATURES:
-        attackers[feature] = Discriminator(embed_dim=embedding_dim, num_classes=num_classes[feature],
-                                           latent_size=args.DISCR_LATENT, device=device).to(device)
-        attackers[feature].train()
-        attacker_trainers[feature] = torch.optim.Adam(attackers[feature].parameters(), args.LR_DISC)
+attackers = {}
+attacker_trainers = {}
+for feature in args.SENSITIVE_FEATURES:
+    attackers[feature] = Discriminator(embed_dim=embedding_dim, num_classes=num_classes[feature],
+                                       latent_size=args.DISCR_LATENT, device=device).to(device)
+    attackers[feature].train()
+    attacker_trainers[feature] = torch.optim.Adam(attackers[feature].parameters(), args.LR_DISC)
 
 # TRAINING ATTACKERS
 best_result = {}
@@ -467,3 +440,23 @@ for feature in args.SENSITIVE_FEATURES:
     print(f"AUC for {feature}: {auc_score:.4f}")
 
 print("finish")
+
+if args.SAVE_RES_TO_TXT:
+    # Append the final evaluation results to the file
+    with open(file_path, "a") as file:
+        file.write(f"Final Epoch Evaluation Results User Model (Filtered) - Run Timestamp: {current_time}\n")
+        file.write(f"Mean Squared Error: {mse:.4f}\n")
+        file.write(f"Root Mean Squared Error: {rmse:.4f}\n")
+        file.write(f"Accuracy: {acc:.4f}\n")
+        file.write(f"Precision: {prec:.4f}\n")
+        file.write(f"Recall: {recall:.4f}\n")
+        file.write(f"F1 Score: {f1:.4f}\n")
+        file.write(f"Specificity: {specificity:.4f}\n")
+        file.write(f"ROC AUC: {roc_auc:.4f}\n")
+        file.write(f"Precision-Recall AUC: {pr_auc:.4f}\n\n")
+
+        file.write(f"Final Epoch Evaluation Results Attackers - Run Timestamp: {current_time}\n")
+        for feature in args.SENSITIVE_FEATURES:
+            auc_score = calculate_auc_score_for_feature(feature_true[feature], feature_pred[feature])
+            file.write(f"AUC for {feature}: {auc_score:.4f}\n")
+        file.write("\n------------------------------------------------\n\n")

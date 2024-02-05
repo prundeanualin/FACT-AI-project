@@ -3,20 +3,17 @@ import torch
 from torch.utils.data import TensorDataset, DataLoader
 import pandas as pd
 import numpy as np
-import random
 import os
 from ml_models import FilterModel, Discriminator
 from tqdm import tqdm
 import torch.nn.functional as F
 from sklearn.metrics import (
-    roc_auc_score,
     mean_absolute_error,
     mean_squared_error,
 )
-from sklearn.preprocessing import label_binarize
 from user_models import NCF, PMF
-from datetime import datetime
-
+from utils import seed_experiments
+from utils_ml import calculate_auc_score_for_feature, split_dataset, write_args_to_file, setup_file_path
 
 # Arguments
 args = argparse.ArgumentParser()
@@ -36,7 +33,7 @@ args.add_argument("-N_EPOCHS", default=10, type=int)
 args.add_argument("-EPOCHS_DISCRIMINATOR", default=10, type=int)
 args.add_argument("-EPOCHS_ATTACKER", default=50, type=int)
 args.add_argument("-FILTER_LAYER_SIZES", default="16,16", type=lambda s: [int(layer_size) for layer_size in s.split(',')])
-args.add_argument("-MODEL", default="NCF", type=str)
+args.add_argument("-MODEL", default="PMF", type=str)
 args.add_argument("-LR", default=0.001, type=float)
 args.add_argument("-LR_DISC", default=0.01, type=float)
 args.add_argument("-DISCR_LATENT", default=16, type=int)
@@ -45,34 +42,26 @@ args.add_argument("-MISSING_RATIO", default=0.2, type=float)
 args.add_argument("-DEVICE", default='cuda', type=str)
 args.add_argument("-NCF_LAYERS", default="32,16,8", type=lambda s: [int(layer_size) for layer_size in s.split(',')])
 args.add_argument("-EMB_DIM", default=16, type=int)
-args.add_argument("-NCF_MODEL_PATH", default="ncf_models_explicit/ncf_model_explicit_epoch_30.pth", type=str)
-args.add_argument("-PMF_MODEL_PATH", default="pmf_models/pmf_model_explicit_epoch_200.pth", type=str)
+args.add_argument("-NCF_MODEL_PATH", default="ncf_models_explicit/ncf_model_explicit_emb_16_epoch_30.pth", type=str)
+args.add_argument("-PMF_MODEL_PATH", default="pmf_models/pmf_model_explicit_emb_16_epoch_80.pth", type=str)
 args.add_argument("-USE_TEST_DATA", default=False, type=bool)
 # Specify the file name for saving results
 args.add_argument("-RESULTS_FILENAME", default="ml_explicit_missing_ratios_results.txt", type=str)
 args.add_argument("-SAVE_RES_TO_TXT", default=False, type=str)
 args.add_argument("-ORIGIN", default=False, type=bool)
+args.add_argument("-RESULTS_DIR", default="ml_experiments_results", type=str)
 args = args.parse_args()
 
 # Set seeds
-torch.manual_seed(args.SEED)
-random.seed(args.SEED)
-np.random.seed(args.SEED)
+seed_experiments(args.SEED)
 model_name = args.MODEL
 print(args)
 print(f"Model: {model_name}")
 
+# Create dirs and .txt
 if args.SAVE_RES_TO_TXT:
-    # Current timestamp to identify this run
-    current_time = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-
-    # Save the args to a string
-    args_str = str(args)
-
-    # Append the args to the file (use 'a' for append mode)
-    with open(args.RESULTS_FILENAME, "a") as file:
-        file.write(f"Run Timestamp: {current_time}\n")
-        file.write(args_str + "\n\n")
+    file_path = setup_file_path(base_dir=args.RESULTS_DIR, results_filename=args.RESULTS_FILENAME)
+    current_time = write_args_to_file(args, file_path=file_path)
 
 # Set device to GPU or CPU
 if args.DEVICE == 'cuda' and torch.cuda.is_available():
@@ -101,49 +90,6 @@ movie_ids = sorted(train['MovieID'].unique())
 movie_id_to_index_mapping = {}
 for i, id in enumerate(movie_ids):
     movie_id_to_index_mapping[id] = i
-
-
-def split_dataset(data, missing_ratio, seed):
-    """
-    Split the dataset based on a specified MISSING_RATIO with a seed for reproducibility.
-
-    Args:
-    data (DataFrame): The original dataset.
-    missing_ratio (float): The ratio of data to be placed in train_data_nofeature.
-    seed (int): The seed for the random number generator.
-
-    Returns:
-    tuple: Two DataFrames, train_data and train_data_nofeature.
-    """
-    # Set the seed
-    np.random.seed(seed)
-
-    # Calculate the number of records needed for the desired ratio
-    target_record_count = int(len(data) * (1 - missing_ratio))
-
-    # Get unique user IDs
-    unique_user_ids = data['UserID'].unique()
-
-    # Shuffle the user IDs
-    np.random.shuffle(unique_user_ids)
-
-    # Initialize variables to keep track of selected users and record count
-    selected_users = []
-    selected_record_count = 0
-
-    # Select users until the target record count is reached
-    for user_id in unique_user_ids:
-        user_record_count = len(data[data['UserID'] == user_id])
-        if selected_record_count + user_record_count > target_record_count:
-            break
-        selected_users.append(user_id)
-        selected_record_count += user_record_count
-
-    # Split the dataset
-    train_data = data[data['UserID'].isin(selected_users)]
-    train_data_nofeature = data[~data['UserID'].isin(selected_users)]
-
-    return train_data, train_data_nofeature
 
 
 def attacker_transform(user, gender, age, occupation):
@@ -180,23 +126,6 @@ def transform(user, item, score, gender, age, occupation, movie_id_to_index_mapp
             torch.tensor(np.array(score), dtype=torch.float32),
         )
     return DataLoader(dataset, batch_size=args.BATCH_SIZE, shuffle=True)
-
-
-def calculate_auc_score_for_feature(feature_true, feature_pred):
-    n_classes = len(np.unique(feature_true))
-
-    # Binarize the true labels for OvR calculation
-    true_binarized = label_binarize(feature_true, classes=np.arange(n_classes))
-
-    # Predictions should be an array with shape [n_samples, n_classes]
-    pred = np.array(feature_pred)
-
-    if n_classes == 2:
-        # Binary classification
-        return roc_auc_score(true_binarized, pred[:, 1])
-    else:
-        # Multi-class classification
-        return roc_auc_score(true_binarized, pred, multi_class='ovr')
 
 
 print("Splitting train data based on missing ratio...")
@@ -490,7 +419,7 @@ print("finish")
 
 if args.SAVE_RES_TO_TXT:
     # Append the final evaluation results to the file
-    with open(args.RESULTS_FILENAME, "a") as file:
+    with open(file_path, "a") as file:
         file.write(f"Final Epoch Evaluation Results User Model (Filtered) - Run Timestamp: {current_time}\n")
         file.write(f"Mean Absolute Error: {mean_absolute_error(y_true, y_pred):.4f}\n")
         file.write(f"Mean Squared Error: {mse:.4f}\n")

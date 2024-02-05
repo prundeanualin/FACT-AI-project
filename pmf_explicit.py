@@ -3,6 +3,7 @@ import torch
 from torch.utils.data import TensorDataset, DataLoader
 from user_models import PMF
 import os
+import argparse
 
 
 # Function to transform data into DataLoader format for PyTorch
@@ -19,19 +20,34 @@ def transform(user_ids, item_ids, score, movie_id_to_index_mapping, batch_size=2
     return DataLoader(dataset, batch_size=batch_size, shuffle=True)
 
 
+# Arguments
+args = argparse.ArgumentParser()
+# Set to True for explicit feedback (1 to 5), False for implicit (0 or 1)
+args.add_argument("-IMPLICIT", default=False, type=bool)
+# Rating threshold for binarizing data, default=1, only for implicit feedback
+args.add_argument("-BINARIZATION_THRESHOLD", default=1, type=int)
+args = args.parse_args()
+
+explicit = not args.IMPLICIT
 base_path = 'data/ml-1m/'
 train_path = base_path + "train.csv"
 checkpoint_dir = 'pmf_models'
-latent_embedding_size = 32
-explicit = False  # Set to True for explicit feedback (1 to 5), False for implicit (0 or 1)
+if explicit:
+    latent_embedding_size = 16
+else:
+    latent_embedding_size = 32
 epochs = 1000
 save_model = True  # Saves the model during training every save_every epochs
-save_every = 50
-save_embeddings = False  # Set to True if implicit and want to save the embeddings to .csv
-only_load = True  # Set to False for enabling training loop, True for only loading model / saving embeddings
+save_every = 200
+eval_every = 10
+only_load = False  # Set to False for enabling training loop, True for only loading model
 batch_size = 1024
 
 feedback_type = 'explicit' if explicit else 'implicit'
+if explicit:
+    checkpoint_path_start = f'{checkpoint_dir}/pmf_model_{feedback_type}_emb_{latent_embedding_size}_epoch_' + "{}.pth"
+else:
+    checkpoint_path_start = f'{checkpoint_dir}/pmf_model_{feedback_type}_emb_{latent_embedding_size}_thresh_{args.BINARIZATION_THRESHOLD}_epoch_' + "{}.pth"
 
 # Check if the directory exists, and create it if it doesn't
 if not os.path.exists(checkpoint_dir):
@@ -41,7 +57,7 @@ if not os.path.exists(checkpoint_dir):
 ratings = pd.read_csv(train_path)
 ratings = ratings.drop(['Gender', 'Age', 'Occupation'], axis=1)
 if not explicit:
-    ratings['Rating'] = (ratings['Rating'] > 1).astype(int)
+    ratings['Rating'] = (ratings['Rating'] > args.BINARIZATION_THRESHOLD).astype(int)
 min_rating, max_rating = ratings['Rating'].min(), ratings['Rating'].max()
 n_users, n_movies = len(ratings['UserID'].unique()), len(ratings['MovieID'].unique())
 
@@ -64,7 +80,7 @@ val_path = base_path + "validation.csv"
 val_ratings = pd.read_csv(val_path)
 val_ratings = val_ratings.drop(['Gender', 'Age', 'Occupation'], axis=1)
 if not explicit:
-    val_ratings['Rating'] = (val_ratings['Rating'] > 1).astype(int)
+    val_ratings['Rating'] = (val_ratings['Rating'] > args.BINARIZATION_THRESHOLD).astype(int)
 
 movie_ids_sorted = sorted(ratings['MovieID'].unique())
 movie_id_to_index_mapping = {}
@@ -85,28 +101,28 @@ if not only_load:
         loss = pmf_model(rating_matrix)
         loss.backward()
         optimizer.step()
-        if epoch % 50 == 0:
+        if epoch % eval_every == 0:
             print(f"Epoch {epoch}, Loss: {loss.item():.3f}")
             if explicit:
                 rmse, mae = pmf_model.evaluate(valid_loader=valid_loader, denormalize_predictions=True,
                                                denormalize_labels=False)
-                print("Validation RMSE: ", rmse, "Validation MAE: ", mae)
+                print("Epoch ", epoch, "Validation RMSE: ", rmse, "Validation MAE: ", mae)
             else:
                 bce, auc_roc = pmf_model.evaluate(valid_loader=valid_loader, denormalize_predictions=False,
                                                   denormalize_labels=False)
-                print("Validation BCE: ", bce, "Validation AUC-ROC: ", auc_roc)
+                print("Epoch ", epoch, "Validation BCE: ", bce, "Validation AUC-ROC: ", auc_roc)
 
-        if save_model and epoch % save_every == 0:
-            checkpoint_path = f'{checkpoint_dir}/pmf_model_{feedback_type}_emb_{latent_embedding_size}_epoch_{epoch}.pth'
+        # Save model every 10 epochs for the first 200, then save every 200
+        if (save_model and epoch < 200 and epoch % 10 == 0) or (save_model and epoch % save_every == 0):
+            checkpoint_path = checkpoint_path_start.format(epoch)
             pmf_model.save_model(checkpoint_path)
             print(f"Model saved at epoch {epoch} to {checkpoint_path}")
 
-models = [100, 200, 400, 600, 800, 1000]
+models = [200, 400, 600, 800, 1000]
 
-for model_name in models:
+for epoch in models:
     # Load the final model for prediction (or choose a specific checkpoint)
-    pmf_model.load_model(
-        f'{checkpoint_dir}/pmf_model_{feedback_type}_emb_{latent_embedding_size}_epoch_{model_name}.pth')
+    pmf_model.load_model(checkpoint_path_start.format(epoch))
 
     if explicit:
         rmse, mae = pmf_model.evaluate(valid_loader=valid_loader, denormalize_predictions=True,

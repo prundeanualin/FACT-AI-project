@@ -80,34 +80,6 @@ print("Length ratings df: " + str(len(ratings)))
 print("Writing the final processed dataframe to csv...")
 final_df.to_csv(base_path + "merged_dataset.csv", index=False)
 
-# OLD CODE
-# # Splitting the final df into train, test, valid
-# train_data, temp_data = train_test_split(final_df, test_size=0.3, random_state=42)
-#
-# # Now split the temporary set into validation and test sets
-# valid_data, test_data = train_test_split(temp_data, test_size=2/3, random_state=42)
-#
-# # Print the sizes of each set
-# print(f"Train set: {len(train_data)} rows ({len(train_data)/len(final_df)*100:.2f}%)")
-# print(f"Validation set: {len(valid_data)} rows ({len(valid_data)/len(final_df)*100:.2f}%)")
-# print(f"Test set: {len(test_data)} rows ({len(test_data)/len(final_df)*100:.2f}%)")
-#
-# # Sort the sets by UserID because NCF requires this
-# train_sorted = train_data.sort_values(by='UserID')
-# validation_sorted = valid_data.sort_values(by='UserID')
-# test_sorted = test_data.sort_values(by='UserID')
-#
-# train_sorted.to_csv(base_path + "train.csv")
-# validation_sorted.to_csv(base_path + "validation.csv")
-# test_sorted.to_csv(base_path + "test.csv")
-# OLD CODE
-
-
-# It seems that NCF (and PMF and LightGCN) cannot model/predict for users/movies it hasn't seen during training.
-# So it seems we need to ensure that train, valid, test all contain at least 1 interaction for every user/movie comb
-# We can use Timestamp to split by time so that for each user we include 70% in train (the first 70%) by sorting
-# by Timestamp for that user. This is often done in recommender systems I think.
-
 # Ensure each movie is represented at least once in the training set
 unique_movies = final_df['MovieID'].unique()
 initial_train_list = []
