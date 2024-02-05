@@ -1,5 +1,5 @@
 # FACT-AI-project
-The project for the FACT-AI MSc course at UvA. Follow instructions below to run the FACT-AI-project FairLISA code:
+The project for the FACT-AI MSc course at UvA. Follow instructions below to run the FACT-AI-project FairLISA code. You can assume that if certain parameters aren't specified in the run commands or in our paper that we used the default ones defined in the code.
 
 ---
 
