@@ -60,7 +60,7 @@ for missing_ratio in missing_ratios:
         vars(args)['LAMBDA_2'] = lambda_2
         vars(args)['LAMBDA_3'] = lambda_3
         vars(args)['RATIO_NO_FEATURE'] = missing_ratio
-        run(args)
+        run(args, device)
 
 df_results = pd.read_csv(results_file, sep=',').head(0)
 plot_missing_ratios(df_results, args.MODEL, missing_ratios)

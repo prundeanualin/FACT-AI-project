@@ -9,7 +9,7 @@ from sklearn.metrics import (
 from model.CD import BaseCD
 from model.utils import *
 
-saved_model_base_path = 'cognitive_diagnosis/saved_user_models/'
+saved_model_base_path = 'saved_user_models/'
 
 methods = {
     'Origin': [0, 0],

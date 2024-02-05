@@ -4,6 +4,7 @@ import argparse
 import pandas as pd
 import time
 
+from model.CD import IRT, MIRT, NCDM
 from cognitive_diagnosis.plotter import results_file
 from model.fairlisa_models import Filter
 from model.Discriminators import Discriminator
@@ -27,7 +28,7 @@ def set_device(args):
 
 def train_user_model(args, device):
 
-    pkl = open("./data/" + args.DATA + "/item2knowledge.pkl", "rb")
+    pkl = open("../data/" + args.DATA + "/item2knowledge.pkl", "rb")
     item2knowledge = pickle.load(pkl)
     pkl.close()
 
@@ -39,9 +40,9 @@ def train_user_model(args, device):
         'epochs': args.EPOCH
     }
 
-    train_data_initial = pd.read_csv("./data/" + args.DATA + "/pisa.train.csv")
-    valid_data_initial = pd.read_csv("./data/" + args.DATA + "/pisa.validation.csv")
-    test_data_initial = pd.read_csv("./data/" + args.DATA + "/pisa.test.csv")
+    train_data_initial = pd.read_csv("../data/" + args.DATA + "/pisa.train.csv")
+    valid_data_initial = pd.read_csv("../data/" + args.DATA + "/pisa.validation.csv")
+    test_data_initial = pd.read_csv("../data/" + args.DATA + "/pisa.test.csv")
 
     print(">> Training the user model...")
     [train, valid, test] = transform(
@@ -66,13 +67,13 @@ def run(args, device):
 
     print("load data")
 
-    pkl = open("./data/" + args.DATA + "/item2knowledge.pkl", "rb")
+    pkl = open("../data/" + args.DATA + "/item2knowledge.pkl", "rb")
     item2knowledge = pickle.load(pkl)
     pkl.close()
 
-    train_data_initial = pd.read_csv("./data/" + args.DATA + "/pisa.train.csv")
-    valid_data_initial = pd.read_csv("./data/" + args.DATA + "/pisa.validation.csv")
-    test_data_initial = pd.read_csv("./data/" + args.DATA + "/pisa.test.csv")
+    train_data_initial = pd.read_csv("../data/" + args.DATA + "/pisa.train.csv")
+    valid_data_initial = pd.read_csv("../data/" + args.DATA + "/pisa.validation.csv")
+    test_data_initial = pd.read_csv("../data/" + args.DATA + "/pisa.test.csv")
 
     # Split the dataset based on a specified MISSING_RATIO with a seed for reproducibility.
     train_w_sensitive_features, train_without_sensitive_features = split_df(train_data_initial, args.SEED, [args.RATIO_NO_FEATURE])
@@ -80,8 +81,8 @@ def run(args, device):
     # train_w_sensitive_features, train_without_sensitive_features = np.split(train_data_initial.sample(frac=1, random_state=args.SEED),
     #                                    [int(args.RATIO_NO_FEATURE * len(train_data_initial))])
 
-    attacker_train_data = pd.read_csv("./data/" + args.DATA + "/pisa.attacker.train.csv")
-    attacker_test_data = pd.read_csv("./data/" + args.DATA + "/pisa.attacker.test.csv")
+    attacker_train_data = pd.read_csv("../data/" + args.DATA + "/pisa.attacker.train.csv")
+    attacker_test_data = pd.read_csv("../data/" + args.DATA + "/pisa.attacker.test.csv")
 
     attacker_train, attacker_test = [
         attacker_transform(data["user_id"], data[args.SENSITIVE_FEATURES], batch_size=args.BATCH_SIZE_ATTACKER)

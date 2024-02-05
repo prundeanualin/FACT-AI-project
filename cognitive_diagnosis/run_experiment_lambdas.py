@@ -55,13 +55,13 @@ for lambda_2 in lambda_values:
     lambda_3 = 0
     vars(args)['LAMBDA_2'] = lambda_2
     vars(args)['LAMBDA_3'] = lambda_3
-    run(args)
+    run(args, device)
 
 for lambda_3 in lambda_values:
     lambda_2 = 0
     vars(args)['LAMBDA_2'] = lambda_2
     vars(args)['LAMBDA_3'] = lambda_3
-    run(args)
+    run(args, device)
 
 df_results = pd.read_csv(results_file, sep=',').head(0)
 plot_lambdas(df_results, args.MODEL, lambda_values)
