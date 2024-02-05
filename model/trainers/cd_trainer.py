@@ -7,7 +7,7 @@ from sklearn.metrics import (
 )
 
 from model.CD import BaseCD
-from utils import *
+from model.utils import *
 
 
 
@@ -82,10 +82,10 @@ def evaluate_model(model: BaseCD, args, eval_data, device, filter_model=None):
             out = model.predict(user_id, item_id, filtered_user_embeddings)
         y_pred.extend(out["prediction"].tolist())
         y_true.extend(response.tolist())
-    acc = accuracy_score(y_true, np.array(y_pred) > 0.5)
-    roc_auc = roc_auc_score(y_true, y_pred)
-    mae = mean_absolute_error(y_true, y_pred)
-    mse = mean_squared_error(y_true, y_pred)
+    acc = format_4dec(accuracy_score(y_true, np.array(y_pred) > 0.5))
+    roc_auc = format_4dec(roc_auc_score(y_true, y_pred))
+    mae = format_4dec(mean_absolute_error(y_true, y_pred))
+    mse = format_4dec(mean_squared_error(y_true, y_pred))
     print("acc:{:.4f}".format(acc))
     print("auc:{:.4f}".format(roc_auc))
     print("mae:{:.4f}".format(mae))

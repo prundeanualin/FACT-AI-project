@@ -2,7 +2,7 @@ import torch
 from torch.utils.data import TensorDataset, DataLoader
 import numpy as np
 
-from utils import model_has_knowledge_dimension
+from model.utils import model_has_knowledge_dimension
 
 
 def transform(model_name, batch_size, datasets, sensitive_features=None, item2knowledge=None):

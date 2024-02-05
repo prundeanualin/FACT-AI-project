@@ -17,7 +17,7 @@ from sklearn.metrics import (
     f1_score
 )
 from sklearn.preprocessing import label_binarize
-from utils import seed_experiments
+from model.utils import seed_experiments
 
 # Arguments
 args = argparse.ArgumentParser()

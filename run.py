@@ -1,25 +1,16 @@
 import pickle
 import argparse
 
-import torch
 import pandas as pd
-from torch.nn import BCELoss
-from tqdm import tqdm
-from sklearn.metrics import roc_auc_score
-import os
 import time
 
-# from EduCDM.MIRT import MIRT
-# from EduCDM.IRT.GD import IRT
-# from EduCDM.NCDM.NCDM import NCDM
-from model.CD import NCDM, IRT, MIRT
-
+from model.CD import IRT, MIRT, NCDM
 from model.fairlisa_models import Filter
 from model.Discriminators import Discriminator
 from preprocess_dataset_pisa import preprocess_dataset, split_df
 from model.dataloader import transform, attacker_transform
 from model.trainers.cd_trainer import *
-from utils import * 
+from model.utils import *
 
 
 import wandb
@@ -27,7 +18,7 @@ import wandb
 args = argparse.ArgumentParser()
 args.add_argument("-DATA", default="pisa2015", type=str)
 args.add_argument("-TRAIN_USER_MODEL", default=False, type=bool)
-args.add_argument("--WANDB_ACTIVE", default=True, type=bool, action=argparse.BooleanOptionalAction)
+args.add_argument("--WANDB_ACTIVE", default=False, type=bool, action=argparse.BooleanOptionalAction)
 
 args.add_argument("-FILTER_MODE", default="separate", type=str)
 args.add_argument(
@@ -170,7 +161,6 @@ if args.TRAIN_USER_MODEL:
     cdm.to(device)
     train_model(cdm, user_model_args, train, valid, test, device, saved_model_base_path)
 
-# exit(0)
 print("Loading the trained user model...")
 cdm.load_model(saved_model_base_path + f'{args.MODEL}.pt')
 print("Evaluating the trained user model...")
@@ -193,6 +183,12 @@ discriminator_trainers = {
 
 if IS_ORIGIN:
     print("\n>> Origin baseline - skipping filter and discriminator training")
+    training_metrics = {
+        "filtered_model/acc": 0,
+        "filtered_model/auc": 0,
+        "filtered_model/mae": 0,
+        "filtered_model/mse": 0
+    }
 else:
 
     # Initialize Filter
@@ -354,7 +350,7 @@ for epoch in range(args.EPOCH_ATTACKER):
         auc_feature = roc_auc_score(feature_true[feature], feature_pred[feature])
         if auc_feature > best_result[feature]:
             print("-- New highscore!")
-            best_result[feature] = auc_feature
+            best_result[feature] = format_4dec(auc_feature)
             best_epoch[feature] = epoch
         print("auc:", auc_feature)
         attacker_metrics[f"attacker/{feature}"] = auc_feature
@@ -369,3 +365,31 @@ for feature in args.SENSITIVE_FEATURES:
 print("\n>> Finish")
 end_time = time.time()
 print("Total duration: ", end_time - start_time)
+
+method = 'FairLISA'
+if args.LAMBDA_3 == 0:
+    if args.LAMBDA_2 == 0:
+        method = 'ComFair'
+    elif args.LAMBDA_2 == 2.0:
+        method = 'Origin'
+
+print("Printing results to table...")
+df = pd.read_csv(results_file, sep=',')
+new_row = {
+    'MODEL': args.MODEL,
+    'METHOD': method,
+    "LAMBDA_2": args.LAMBDA_2,
+    "LAMBDA_3": args.LAMBDA_3,
+    "MISSING_RATIO": args.RATIO_NO_FEATURE,
+    "SEED": args.SEED,
+    'ACC': training_metrics["filtered_model/acc"],
+    'AUC': training_metrics["filtered_model/auc"],
+    'MAE': training_metrics["filtered_model/mae"],
+    'MSE': training_metrics["filtered_model/mse"],
+    'Region': best_result['OECD'],
+    'Gender': best_result['GENDER'],
+    'Family Education': best_result['EDU'],
+    'Family Economic': best_result['ECONOMIC'],
+}
+df2 = df.append(new_row, ignore_index=True)
+df2.to_csv(results_file, index=False)
